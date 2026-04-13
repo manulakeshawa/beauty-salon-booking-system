@@ -1,0 +1,541 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+
+/* ==========================================================================
+   Beauty Salon Review - Global Styles
+   --------------------------------------------------------------------------
+   This stylesheet is used by:
+   - review-form.html
+   - review-list.html
+   - review-edit.html
+
+   Organization (keep cascade stable):
+   - Design tokens (CSS variables)
+   - Base / resets
+   - Dashboard shell + layout wrappers
+   - Typography
+   - Forms
+   - Buttons / links
+   - Table / list views
+   - Edit page summary
+   - Responsive overrides
+   ========================================================================== */
+
+:root {
+    color-scheme: light;
+
+    /* Surfaces */
+    --bg: #fbfafc;
+    --surface: #ffffff;
+    --surface-2: #fff7fb;
+
+    /* Text */
+    --text: #1f2937;
+    --muted: #6b7280;
+
+    /* Borders */
+    --border: #f0e7ef;
+    --border-strong: #e9d7e4;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 1px rgba(16, 24, 40, 0.04);
+    --shadow-md: 0 10px 25px rgba(16, 24, 40, 0.08);
+
+    /* Radii */
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 18px;
+
+    /* Brand / accents */
+    --pink-50: #fff1f6;
+    --pink-100: #ffe4ef;
+    --pink-200: #fecddf;
+    --pink-500: #ec4899;
+    --pink-600: #db2777;
+    --pink-700: #be185d;
+
+    /* Focus ring */
+    --focus: rgba(236, 72, 153, 0.28);
+
+    /* Layout */
+    --content-max: 1180px;
+    --pad-x: 24px;
+    --pad-y: 28px;
+}
+
+/* =====================
+   BASE / RESET
+   ===================== */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+    color: inherit;
+}
+
+/* =====================
+   DASHBOARD SHELL (reusable)
+   ===================== */
+
+/* Optional top header/navbar (not required by current HTML, safe to keep) */
+.topbar,
+header.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.86);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+}
+
+.topbar__inner,
+header.site-header .inner {
+    max-width: var(--content-max);
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px var(--pad-x);
+}
+
+.topbar__title {
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+.topbar__subtitle {
+    color: var(--muted);
+    font-size: 0.92rem;
+}
+
+/* Page content wrapper used by your pages */
+.page-wrapper {
+    width: 100%;
+    min-height: 100%;
+    padding: var(--pad-y) var(--pad-x);
+}
+
+.page-wrapper--list {
+    padding-top: 22px;
+}
+
+/* Main card container used by your pages */
+.container {
+    width: 100%;
+    max-width: var(--content-max);
+    margin: 0 auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 26px 26px 22px;
+}
+
+/* List container can be slightly roomier */
+.container--list {
+    padding: 26px 22px 18px;
+}
+
+/* Decorative accent line (subtle) */
+.container::before {
+    content: "";
+    display: block;
+    height: 3px;
+    width: 64px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--pink-500), rgba(236, 72, 153, 0.15));
+    margin: 2px 0 16px;
+}
+
+/* =====================
+   TYPOGRAPHY (matches your HTML classes)
+   ===================== */
+
+.title {
+    margin: 6px 0 6px;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    text-align: left;
+}
+
+.subtitle {
+    margin: 0 0 20px;
+    color: var(--muted);
+    font-size: 0.98rem;
+    font-weight: 500;
+    text-align: left;
+}
+
+/* =====================
+   FORMS (reusable; no HTML changes needed)
+   ===================== */
+
+/* Keep form content readable even inside a wide card */
+.container form {
+    max-width: 760px;
+}
+
+.container--list form {
+    max-width: none;
+}
+
+form label {
+    display: block;
+    margin: 14px 0 6px;
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.95rem;
+}
+
+input,
+textarea,
+select {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    box-shadow: var(--shadow-sm);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #9ca3af;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 110px;
+}
+
+select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 20 20'%3E%3Cpath fill='%236b7280' d='M5.5 7.5a1 1 0 0 1 1.4 0L10 10.6l3.1-3.1a1 1 0 1 1 1.4 1.4l-3.8 3.8a1 1 0 0 1-1.4 0L5.5 8.9a1 1 0 0 1 0-1.4Z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 40px;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: rgba(236, 72, 153, 0.55);
+    box-shadow: 0 0 0 4px var(--focus), var(--shadow-sm);
+    background: #fff;
+}
+
+/* =====================
+   BUTTONS / LINKS (matches your classes)
+   ===================== */
+
+.submit-btn,
+.view-link,
+.actions a {
+    border-radius: 999px;
+    font-weight: 600;
+    letter-spacing: 0.15px;
+}
+
+.submit-btn {
+    width: 100%;
+    margin-top: 18px;
+    padding: 11px 14px;
+    border: 1px solid rgba(219, 39, 119, 0.25);
+    background: linear-gradient(180deg, rgba(236, 72, 153, 0.95), rgba(219, 39, 119, 0.95));
+    color: #ffffff;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(236, 72, 153, 0.18);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.submit-btn:hover,
+.submit-btn:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(236, 72, 153, 0.22);
+    filter: saturate(1.05);
+}
+
+.submit-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 10px 20px rgba(236, 72, 153, 0.16);
+}
+
+/* Link that behaves like a secondary/back button */
+.view-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding: 10px 14px;
+    text-decoration: none;
+    background: #ffffff;
+    border: 1px solid var(--border-strong);
+    color: #374151;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.view-link:hover,
+.view-link:focus {
+    transform: translateY(-1px);
+    border-color: rgba(236, 72, 153, 0.35);
+    color: var(--pink-700);
+    box-shadow: 0 10px 20px rgba(16, 24, 40, 0.08);
+}
+
+.view-link:active {
+    transform: translateY(0);
+}
+
+/* Optional reusable button classes (not used by current HTML yet) */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    text-decoration: none;
+    color: #374151;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+}
+
+.btn--primary {
+    border-color: rgba(219, 39, 119, 0.25);
+    background: linear-gradient(180deg, rgba(236, 72, 153, 0.95), rgba(219, 39, 119, 0.95));
+    color: #fff;
+    box-shadow: 0 10px 20px rgba(236, 72, 153, 0.18);
+}
+
+.btn--secondary {
+    background: var(--surface);
+    color: #374151;
+}
+
+/* =====================
+   TABLE CARD + TABLE (matches your HTML)
+   ===================== */
+
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+}
+
+.review-table {
+    width: 100%;
+    min-width: 780px;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.95rem;
+}
+
+.review-table thead th {
+    position: sticky;
+    top: 0;
+    background: linear-gradient(180deg, #ffffff, #fff7fb);
+    color: #374151;
+    text-align: left;
+    padding: 12px 14px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+
+.review-table tbody td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    color: #374151;
+    background: var(--surface);
+}
+
+.review-table tbody tr:hover td {
+    background: var(--pink-50);
+}
+
+.review-table th:first-child,
+.review-table td:first-child {
+    white-space: nowrap;
+}
+
+.review-table th:nth-child(5),
+.review-table td:nth-child(5) {
+    max-width: 360px;
+    word-break: break-word;
+}
+
+.review-table .actions {
+    white-space: nowrap;
+}
+
+/* Action buttons inside table */
+.actions a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    text-decoration: none;
+    border: 1px solid transparent;
+    box-shadow: none;
+    transition: transform 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.actions a:hover,
+.actions a:focus {
+    transform: translateY(-1px);
+}
+
+.edit-btn {
+    background: #eef2ff;
+    color: #3730a3;
+    border-color: rgba(55, 48, 163, 0.16);
+}
+
+.edit-btn:hover,
+.edit-btn:focus {
+    background: #e0e7ff;
+}
+
+.delete-btn {
+    background: #fff1f2;
+    color: #9f1239;
+    border-color: rgba(159, 18, 57, 0.16);
+}
+
+.delete-btn:hover,
+.delete-btn:focus {
+    background: #ffe4e6;
+}
+
+/* =====================
+   EDIT SUMMARY (already used by your edit page)
+   ===================== */
+
+.edit-summary {
+    margin: 0 0 18px;
+    padding: 14px 16px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(180deg, var(--surface-2), #ffffff);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+}
+
+.edit-summary__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 12px;
+    margin: 0;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    color: #374151;
+}
+
+.edit-summary__row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.edit-summary__row:first-child {
+    padding-top: 0;
+}
+
+.edit-summary__label {
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    min-width: 6.2rem;
+}
+
+.edit-summary__value {
+    font-weight: 600;
+    color: #111827;
+    word-break: break-word;
+}
+
+/* =====================
+   RESPONSIVE
+   ===================== */
+
+@media (max-width: 900px) {
+    :root {
+        --pad-x: 18px;
+        --pad-y: 22px;
+    }
+
+    .container {
+        padding: 20px 18px 16px;
+        border-radius: 16px;
+    }
+
+    .title {
+        font-size: 1.35rem;
+    }
+
+    .subtitle {
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 600px) {
+    :root {
+        --pad-x: 14px;
+        --pad-y: 18px;
+    }
+
+    .container::before {
+        width: 56px;
+        margin-bottom: 12px;
+    }
+
+    input,
+    textarea,
+    select {
+        padding: 10px 11px;
+    }
+
+    .submit-btn {
+        padding: 10px 12px;
+    }
+
+    .review-table {
+        min-width: 720px;
+        font-size: 0.92rem;
+    }
+}

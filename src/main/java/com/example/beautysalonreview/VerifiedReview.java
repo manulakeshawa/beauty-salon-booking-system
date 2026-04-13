@@ -1,3 +1,5 @@
+package com.example.beautysalonreview;
+
 public class VerifiedReview extends Review {
 
     public VerifiedReview() {

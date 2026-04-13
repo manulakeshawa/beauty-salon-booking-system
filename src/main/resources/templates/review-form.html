@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Review Submission Page</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="site-header" aria-label="Salon dashboard header">
+    <div class="inner">
+        <div>
+            <div class="topbar__title">Beauty Salon Reviews</div>
+            <div class="topbar__subtitle"></div>
+        </div>
+        <nav aria-label="Primary">
+            <a class="btn btn--secondary" href="/">Create</a>
+            <a class="btn btn--primary" href="/reviews">Reviews</a>
+        </nav>
+    </div>
+</header>
+
+<main class="page-wrapper" aria-label="Create review page">
+    <div class="container">
+        <h2 class="title">Create a Review</h2>
+        <p class="subtitle">Capture customer feedback with a clean, consistent format.</p>
+
+        <form action="/submitReview" method="post">
+            <label>Review ID</label>
+            <input type="number" name="reviewId" required>
+
+            <label>Customer Name</label>
+            <input type="text" name="customerName" required>
+
+            <label>Service Name</label>
+            <input type="text" name="serviceName" required>
+
+            <label>Rating</label>
+            <select name="rating">
+                <option value="1">1 - Very Poor</option>
+                <option value="2">2 - Poor</option>
+                <option value="3">3 - Average</option>
+                <option value="4">4 - Good</option>
+                <option value="5">5 - Excellent</option>
+            </select>
+
+            <label>Comment</label>
+            <textarea name="comment" rows="4" required></textarea>
+
+            <button class="submit-btn" type="submit">Submit Review</button>
+        </form>
+
+        <a class="view-link" href="/reviews">View All Reviews</a>
+    </div>
+</main>
+</body>
+</html>

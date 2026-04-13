@@ -1,3 +1,5 @@
+package com.example.beautysalonreview;
+
 public class PublicReview extends Review {
 
     public PublicReview() {

@@ -1,3 +1,5 @@
+package com.example.beautysalonreview;
+
 public class Review {
     private int reviewId;
     private String customerName;

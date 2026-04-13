@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Review List</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header class="site-header" aria-label="Salon dashboard header">
+    <div class="inner">
+        <div>
+            <div class="topbar__title">Beauty Salon Reviews</div>
+            <div class="topbar__subtitle"></div>
+        </div>
+        <nav aria-label="Primary">
+            <a class="btn btn--secondary" href="/">Create</a>
+            <a class="btn btn--primary" href="/reviews">Reviews</a>
+        </nav>
+    </div>
+</header>
+
+<main class="page-wrapper page-wrapper--list" aria-label="Review list page">
+    <div class="container container--list">
+
+        <h2 class="title">All Reviews</h2>
+        <p class="subtitle">Manage customer feedback</p>
+
+        <div class="table-responsive">
+        <table class="review-table">
+            <thead>
+            <tr>
+                <th>Review ID</th>
+                <th>Customer</th>
+                <th>Service</th>
+                <th>Rating</th>
+                <th>Comment</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:each="review : ${reviews}">
+                <td th:text="${review.reviewId}"></td>
+                <td th:text="${review.customerName}"></td>
+                <td th:text="${review.serviceName}"></td>
+                <td th:text="${review.rating}"></td>
+                <td th:text="${review.comment}"></td>
+                <td class="actions">
+                    <a class="edit-btn" th:href="@{/editReview(id=${review.reviewId})}">Edit</a>
+                    <a class="delete-btn"
+                       th:href="@{/deleteReview(id=${review.reviewId})}"
+                       onclick="return confirm('Are you sure you want to delete this review?');">
+                        Delete
+                    </a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        </div>
+
+        <a class="view-link" href="/">Back to Form</a>
+
+    </div>
+</main>
+
+</body>
+</html>

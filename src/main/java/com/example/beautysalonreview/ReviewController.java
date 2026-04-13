@@ -1,8 +1,6 @@
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+package com.example.beautysalonreview;
+
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -112,5 +110,18 @@ public class ReviewController {
         } catch (IOException e) {
             System.out.println("Error rewriting file: " + e.getMessage());
         }
+    }
+
+    public List<Review> getAllReviews() {
+        return reviews;
+    }
+
+    public Review getReviewById(int reviewId) {
+        for (Review review : reviews) {
+            if (review.getReviewId() == reviewId) {
+                return review;
+            }
+        }
+        return null;
     }
 }
