@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lumière Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        body { background-color: #fdf7f8; }
+        .btn-lumiere {
+            background-color: #d8a4b1;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        .btn-lumiere:hover {
+            background-color: #c48c9a;
+            color: white;
+        }
+    </style>
+</head>
+<body class="py-5">
+    
+    <div class="container-fluid px-5">
+
+        <div th:if="${param.error != null and param.error[0] == 'unauthorized'}" class="alert alert-danger shadow-sm mb-4" style="background-color: #fdf2f4; color: #a44c5f; border-radius: 12px; border: none;">
+            <strong>⚠️ Access Denied:</strong> You do not have the Manager permissions required to perform that action.
+        </div>
+        
+        <div class="card border-0 shadow-sm mb-5" style="border-radius: 15px; background-color: #d8a4b1; position: relative;">
+            
+            <div class="position-absolute top-0 end-0 p-3 mt-2 me-2">
+                <a href="/" class="btn btn-light fw-bold shadow-sm px-4" style="color: #d8a4b1; border-radius: 50px;">
+                    View Live Storefront
+                </a>
+            </div>
+
+            <div class="card-body p-5 text-center text-white">
+                <h1 class="display-4 fw-bold mb-3 mt-3">Lumière Salon Management System</h1>
+                <p class="lead mb-0">Crafting seamless operations for exceptional beauty experiences.</p>
+            </div>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm module-card p-4" style="border-radius: 15px;">
+                    <span class="badge text-dark mb-3 w-50" style="background-color: #f0e4e6;">CLIENTS</span>
+                    <h3 style="color: #6d4c53;">Customer Directory</h3>
+                    <p class="text-muted mt-2 mb-4">Access, review, and manage your full salon client base.</p>
+                    <a href="/customers?action=list" class="btn btn-lumiere mt-auto w-100">Open Directory</a>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm module-card p-4" style="border-radius: 15px;">
+                    <span class="badge text-dark mb-3 w-50" style="background-color: #f0e4e6;">OFFERINGS</span>
+                    <h3 style="color: #6d4c53;">Salon Services</h3>
+                    <p class="text-muted mt-2 mb-4">Curate service menus, packages, and pricing with ease.</p>
+                    <a href="/services" class="btn btn-lumiere mt-auto w-100">View Services</a>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm module-card p-4" style="border-radius: 15px;">
+                    <span class="badge text-dark mb-3 w-50" style="background-color: #f0e4e6;">SCHEDULING</span>
+                    <h3 style="color: #6d4c53;">Appointments</h3>
+                    <p class="text-muted mt-2 mb-4">Coordinate daily bookings and keep every session on track.</p>
+                    <a href="/appointments" class="btn btn-lumiere mt-auto w-100">Manage Bookings</a>
+                </div>
+            </div>
+            
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm module-card p-4" style="border-radius: 15px;">
+                    <span class="badge text-dark mb-3 w-50" style="background-color: #f0e4e6;">TEAM</span>
+                    <h3 style="color: #6d4c53;">Stylist Roster</h3>
+                    <p class="text-muted mt-2 mb-4">Monitor stylist profiles, specialties, and availability.</p>
+                    <a href="/stylists" class="btn btn-lumiere mt-auto w-100">Open Roster</a>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm module-card p-4" style="border-radius: 15px;">
+                    <span class="badge text-dark mb-3 w-50" style="background-color: #f0e4e6;">INSIGHT</span>
+                    <h3 style="color: #6d4c53;">Reviews & Feedback</h3>
+                    <p class="text-muted mt-2 mb-4">Track guest satisfaction and elevate service quality.</p>
+                    <a href="/reviews" class="btn btn-lumiere mt-auto w-100">Read Feedback</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

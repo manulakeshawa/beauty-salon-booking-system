@@ -1,0 +1,7 @@
+3001,Amaya Fernando,Lumière Signature Facial,2026-04-20,10:00,Confirmed
+3002,Dineth Perera,Classic Gentlemen's Grooming,2026-04-20,11:30,Confirmed
+3003,Kavindi Silva,Bridal Hair & Makeup Package,2026-04-21,08:30,Pending
+3004,Roshan Jayawardena,Bespoke Hair Styling,2026-04-21,14:00,Confirmed
+3005,Nethmi De Silva,Luxury Gel Manicure,2026-04-22,10:30,Pending
+3006,Sudeera Shasanka,Keratin Smoothing Treatment,2026-04-22,16:00,Pending
+3007,Sarah-Jane De Silva,Bridal Hair & Makeup Package,2026-04-30,18:00,Confirmed

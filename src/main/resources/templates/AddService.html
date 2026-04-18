@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Add service | Beauty Salon</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+        :root {
+            --salon-rose: #e8b4bc;
+            --salon-rose-soft: #f5e1e5;
+            --salon-blush: #fdf6f8;
+            --salon-ink: #2d2d2d;
+            --salon-muted: #5c5c5c;
+        }
+        body {
+            background: linear-gradient(165deg, var(--salon-blush) 0%, #ffffff 45%, #f9f4f6 100%);
+            color: var(--salon-ink);
+            min-height: 100vh;
+        }
+        .navbar-salon {
+            background: rgba(255, 255, 255, 0.92) !important;
+            border-bottom: 1px solid rgba(232, 180, 188, 0.35);
+            backdrop-filter: blur(8px);
+        }
+        .brand-mark {
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            color: var(--salon-ink);
+        }
+        .brand-accent {
+            color: var(--salon-rose);
+        }
+        .card-glass {
+            background: #ffffff;
+            border: 1px solid rgba(232, 180, 188, 0.25);
+            border-radius: 1rem;
+            box-shadow: 0 12px 40px rgba(45, 45, 45, 0.06);
+        }
+        .card-header-salon {
+            background: linear-gradient(90deg, var(--salon-rose-soft) 0%, #ffffff 100%);
+            border-bottom: 1px solid rgba(232, 180, 188, 0.2);
+            font-weight: 600;
+        }
+        .form-label {
+            font-size: 0.875rem;
+            color: var(--salon-muted);
+            font-weight: 500;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--salon-rose);
+            box-shadow: 0 0 0 0.2rem rgba(232, 180, 188, 0.35);
+        }
+        .btn-salon-primary {
+            background: linear-gradient(135deg, #d48a96 0%, var(--salon-rose) 100%);
+            border: none;
+            color: #fff;
+            font-weight: 500;
+            padding: 0.5rem 1.5rem;
+            box-shadow: 0 4px 14px rgba(232, 180, 188, 0.45);
+        }
+        .btn-salon-primary:hover {
+            background: linear-gradient(135deg, #c77a87 0%, #d48a96 100%);
+            color: #fff;
+        }
+        .link-muted-salon {
+            color: var(--salon-muted);
+        }
+        .link-muted-salon:hover {
+            color: var(--salon-ink);
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-salon mb-4">
+    <div class="container">
+        <span class="navbar-brand brand-mark mb-0">Lumière <span class="brand-accent">Salon</span></span>
+        <a th:href="@{/services(action='list')}" class="nav-link link-muted-salon small px-0">← Back to services</a>
+    </div>
+</nav>
+
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-xl-6">
+            <h1 class="h3 fw-semibold mb-4">Add new service</h1>
+            <div class="card card-glass">
+                <div class="card-header card-header-salon py-3 px-4 rounded-top-4">
+                    Service details
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" th:action="@{/services}" class="needs-validation" novalidate>
+                        <div class="mb-3">
+                            <label for="serviceId" class="form-label">Service ID</label>
+                            <input type="number" class="form-control" id="serviceId" name="serviceId" th:value="${generatedServiceId}" readonly>
+                            <div class="invalid-feedback">Enter a numeric service ID.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="type" class="form-label">Type</label>
+                            <select class="form-select" id="type" name="type" required>
+                                <option value="" selected disabled>Choose type…</option>
+                                <option value="standard">Standard</option>
+                                <option value="package">Package</option>
+                            </select>
+                            <div class="invalid-feedback">Select standard or package.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="name" name="name" required maxlength="200"
+                                   placeholder="Service name">
+                            <div class="invalid-feedback">Name is required.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="4" required
+                                      placeholder="What clients can expect…"></textarea>
+                            <div class="invalid-feedback">Add a short description.</div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="basePrice" class="form-label">Base price</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted">LKR</span>
+                                <input type="number" class="form-control border-start-0 ps-0" id="basePrice" name="basePrice"
+                                       required min="0" step="0.01" placeholder="0.00">
+                            </div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center pt-2">
+                            <a th:href="@{/services(action='list')}" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+                            <button type="submit" class="btn btn-salon-primary rounded-pill">Save service</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+<script>
+(function () {
+    'use strict';
+    var form = document.querySelector('.needs-validation');
+    if (!form) return;
+    form.addEventListener('submit', function (e) {
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    });
+})();
+</script>
+</body>
+</html>

@@ -1,4 +1,7 @@
-v2|1|Nimal|Haircut||4|Great service|Public|
-v2|2|Alex|Facial|Nalika|4|Worth the price!|Public|
-v2|3|Jesse|Nails|Nalika|5|Excellent service|Verified|
-v2|8|Kasun|Facial|Nalika|4|Good|Verified|5c389504-e41c-4bfb-8106-913ee11e015c
+v2|5001|Amaya Fernando|Lumière Signature Facial|Nalika|4|Absolutely incredible experience. My skin has never felt better!|Public|c18ca044-79c6-4064-8b50-4b647cebdadf
+v2|5002|Dineth Perera|Classic Gentlemen's Grooming|Kamindu|5|Kamindu is a true professional. The hot towel shave was top notch.|Public|ab7211ca-954c-4bec-a898-7a6f2d5d9e3a
+v2|5003|Kavindi Silva|Bridal Hair & Makeup Package|Kasun|5|Kasun made me look flawless for my big day. Highly recommend this salon!|Public|5a2558db-d69f-4fa6-925b-2f08c08af93c
+v2|5004|Roshan Jayawardena|Bespoke Hair Styling|Kasun|4|Great sharp cut. The salon has a wonderful and relaxing atmosphere.|Public|f9cab8bb-d638-437a-bdb4-631140e5c936
+v2|5005|Nethmi De Silva|Luxury Gel Manicure|Dinithi|5|Dinithi is a perfectionist. The gel polish looks flawless and vibrant.|Public|9b7f777b-99ca-4969-9422-ab7d636f87b1
+v2|5006|Sudeera Shasanka|Keratin Smoothing Treatment|Shenali|4|Very professional service. My hair is incredibly smooth and easy to manage now.|Public|d7154dde-3e83-411a-aae8-ea0f12c581cb
+v2|5007|Sarah-Jane De Silva|Bridal Hair & Makeup Package|Shenali|5|Stunning results and professional service. I couldn't have asked for a better bridal glow-up!|Verified|566445cc-5521-4c4f-8041-6e092d609801

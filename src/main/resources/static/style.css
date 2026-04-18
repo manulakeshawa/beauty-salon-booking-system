@@ -46,15 +46,15 @@
     --radius-lg: 18px;
 
     /* Brand / accents */
-    --pink-50: #fff1f6;
-    --pink-100: #ffe4ef;
-    --pink-200: #fecddf;
-    --pink-500: #ec4899;
-    --pink-600: #db2777;
-    --pink-700: #be185d;
+    --pink-50: #fff9fb;
+    --pink-100: #f4dde4;
+    --pink-200: #f2d7df;
+    --pink-500: #d9a5b3;
+    --pink-600: #c88f9f;
+    --pink-700: #8f596c;
 
     /* Focus ring */
-    --focus: rgba(236, 72, 153, 0.28);
+    --focus: rgba(217, 165, 179, 0.32);
 
     /* Layout */
     --content-max: 1180px;
@@ -162,7 +162,7 @@ header.site-header .inner {
     height: 3px;
     width: 64px;
     border-radius: 999px;
-    background: linear-gradient(90deg, var(--pink-500), rgba(236, 72, 153, 0.15));
+    background: linear-gradient(90deg, var(--pink-500), rgba(217, 165, 179, 0.18));
     margin: 2px 0 16px;
 }
 
@@ -243,7 +243,7 @@ input:focus,
 textarea:focus,
 select:focus {
     outline: none;
-    border-color: rgba(236, 72, 153, 0.55);
+    border-color: rgba(217, 165, 179, 0.7);
     box-shadow: 0 0 0 4px var(--focus), var(--shadow-sm);
     background: #fff;
 }
@@ -264,24 +264,24 @@ select:focus {
     width: 100%;
     margin-top: 18px;
     padding: 11px 14px;
-    border: 1px solid rgba(219, 39, 119, 0.25);
-    background: linear-gradient(180deg, rgba(236, 72, 153, 0.95), rgba(219, 39, 119, 0.95));
+    border: 1px solid rgba(217, 165, 179, 0.5);
+    background: linear-gradient(180deg, rgba(217, 165, 179, 0.98), rgba(200, 143, 159, 0.98));
     color: #ffffff;
     cursor: pointer;
-    box-shadow: 0 10px 20px rgba(236, 72, 153, 0.18);
+    box-shadow: 0 10px 20px rgba(173, 127, 141, 0.2);
     transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
 }
 
 .submit-btn:hover,
 .submit-btn:focus {
     transform: translateY(-1px);
-    box-shadow: 0 14px 28px rgba(236, 72, 153, 0.22);
+    box-shadow: 0 14px 28px rgba(173, 127, 141, 0.24);
     filter: saturate(1.05);
 }
 
 .submit-btn:active {
     transform: translateY(0);
-    box-shadow: 0 10px 20px rgba(236, 72, 153, 0.16);
+    box-shadow: 0 10px 20px rgba(173, 127, 141, 0.18);
 }
 
 /* Link that behaves like a secondary/back button */
@@ -303,7 +303,7 @@ select:focus {
 .view-link:hover,
 .view-link:focus {
     transform: translateY(-1px);
-    border-color: rgba(236, 72, 153, 0.35);
+    border-color: rgba(217, 165, 179, 0.7);
     color: var(--pink-700);
     box-shadow: 0 10px 20px rgba(16, 24, 40, 0.08);
 }
@@ -332,7 +332,7 @@ select:focus {
 .btn:hover,
 .btn:focus {
     transform: translateY(-1px);
-    border-color: rgba(236, 72, 153, 0.35);
+    border-color: rgba(217, 165, 179, 0.7);
     color: var(--pink-700);
     box-shadow: 0 10px 20px rgba(16, 24, 40, 0.08);
     outline: none;
@@ -343,16 +343,16 @@ select:focus {
 }
 
 .btn--primary {
-    border-color: rgba(219, 39, 119, 0.25);
-    background: linear-gradient(180deg, rgba(236, 72, 153, 0.95), rgba(219, 39, 119, 0.95));
+    border-color: rgba(217, 165, 179, 0.5);
+    background: linear-gradient(180deg, rgba(217, 165, 179, 0.98), rgba(200, 143, 159, 0.98));
     color: #fff;
-    box-shadow: 0 10px 20px rgba(236, 72, 153, 0.18);
+    box-shadow: 0 10px 20px rgba(173, 127, 141, 0.2);
 }
 
 .btn--primary:hover,
 .btn--primary:focus {
     color: #fff;
-    box-shadow: 0 14px 28px rgba(236, 72, 153, 0.22);
+    box-shadow: 0 14px 28px rgba(173, 127, 141, 0.24);
     filter: saturate(1.05);
 }
 
@@ -396,7 +396,7 @@ select:focus {
     font-weight: 700;
     font-size: 0.78rem;
     background: #fff7fb;
-    border: 1px solid rgba(236, 72, 153, 0.22);
+    border: 1px solid rgba(217, 165, 179, 0.45);
     color: var(--pink-700);
     white-space: nowrap;
 }
@@ -672,3 +672,4 @@ select:focus {
         font-size: 0.92rem;
     }
 }
+

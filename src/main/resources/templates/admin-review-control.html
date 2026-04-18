@@ -3,6 +3,18 @@
 <head>
     <title>Admin Review Control</title>
     <link rel="stylesheet" href="/style.css">
+    <style>
+        .lumiere-alert {
+            margin: 1rem 0 1.25rem;
+            padding: 0.9rem 1rem;
+            border-radius: 0.85rem;
+            border: 1px solid #e7c3cc;
+            background: linear-gradient(180deg, #fff5f7 0%, #fff1f4 100%);
+            color: #7d4654;
+            box-shadow: 0 0.35rem 1rem rgba(173, 127, 141, 0.12);
+            font-weight: 500;
+        }
+    </style>
 </head>
 <body>
 
@@ -13,9 +25,9 @@
             <div class="topbar__subtitle">Admin control</div>
         </div>
         <nav aria-label="Primary">
-            <a class="btn btn--secondary" href="/">Create</a>
+            <a class="btn btn--secondary" href="/admin">Return to Dashboard</a>
             <a class="btn" href="/reviews">Customer View</a>
-            <a class="btn btn--primary" href="/admin/reviews">Admin</a>
+            <a class="btn btn--primary" href="/admin">Admin</a>
         </nav>
     </div>
 </header>
@@ -24,6 +36,9 @@
     <div class="container container--list">
         <h2 class="title">Admin Review Control</h2>
         <p class="subtitle">Review moderation (delete inappropriate or outdated reviews)</p>
+        <div class="lumiere-alert" th:if="${param.error != null and param.error[0] == 'unauthorized'}" role="alert">
+            You do not have permission to modify reviews. Manager access is required.
+        </div>
 
         <form class="filter-form" action="/admin/reviews" method="get" aria-label="Filter reviews">
             <div class="filter-grid">
@@ -65,8 +80,11 @@
                     <td th:text="${review.rating}"></td>
                     <td th:text="${review.comment}"></td>
                     <td class="actions">
-                        <a class="edit-btn" th:href="@{/admin/editReview(id=${review.reviewId})}">Edit</a>
+                        <a class="edit-btn"
+                           th:if="${session.staffRole == 'MANAGER'}"
+                           th:href="@{/admin/editReview(id=${review.reviewId})}">Edit</a>
                         <a class="delete-btn"
+                           th:if="${session.staffRole == 'MANAGER'}"
                            th:href="@{/admin/deleteReview(id=${review.reviewId})}"
                            onclick="return confirm('Delete this review as admin?');">
                             Delete
@@ -83,4 +101,3 @@
 
 </body>
 </html>
-

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Services | Beauty Salon</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+        :root {
+            --salon-rose: #e8b4bc;
+            --salon-rose-soft: #f5e1e5;
+            --salon-blush: #fdf6f8;
+            --salon-ink: #2d2d2d;
+            --salon-muted: #5c5c5c;
+        }
+        body {
+            background: linear-gradient(165deg, var(--salon-blush) 0%, #ffffff 45%, #f9f4f6 100%);
+            color: var(--salon-ink);
+            min-height: 100vh;
+        }
+        .navbar-salon {
+            background: rgba(255, 255, 255, 0.92) !important;
+            border-bottom: 1px solid rgba(232, 180, 188, 0.35);
+            backdrop-filter: blur(8px);
+        }
+        .brand-mark {
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            color: var(--salon-ink);
+        }
+        .brand-accent {
+            color: var(--salon-rose);
+        }
+        .page-title {
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+        .btn-salon-primary {
+            background: linear-gradient(135deg, #d48a96 0%, var(--salon-rose) 100%);
+            border: none;
+            color: #fff;
+            font-weight: 500;
+            padding: 0.5rem 1.25rem;
+            box-shadow: 0 4px 14px rgba(232, 180, 188, 0.45);
+        }
+        .btn-salon-primary:hover {
+            background: linear-gradient(135deg, #c77a87 0%, #d48a96 100%);
+            color: #fff;
+        }
+        .card-glass {
+            background: #ffffff;
+            border: 1px solid rgba(232, 180, 188, 0.25);
+            border-radius: 1rem;
+            box-shadow: 0 12px 40px rgba(45, 45, 45, 0.06);
+        }
+        .table-salon thead th {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--salon-muted);
+            border-bottom-width: 1px;
+            background: var(--salon-rose-soft);
+        }
+        .table-salon tbody tr:hover {
+            background-color: rgba(245, 225, 229, 0.35);
+        }
+        .badge-type-standard {
+            background: rgba(92, 92, 92, 0.12);
+            color: var(--salon-muted);
+            font-weight: 500;
+        }
+        .badge-type-package {
+            background: rgba(232, 180, 188, 0.35);
+            color: #8b4a56;
+            font-weight: 500;
+        }
+        .btn-action-edit {
+            color: var(--salon-muted);
+            border-color: rgba(92, 92, 92, 0.2);
+        }
+        .btn-action-edit:hover {
+            background: var(--salon-rose-soft);
+            border-color: var(--salon-rose);
+            color: var(--salon-ink);
+        }
+        .btn-action-delete {
+            color: #a94442;
+            border-color: rgba(169, 68, 66, 0.25);
+        }
+        .btn-action-delete:hover {
+            background: #fdeaea;
+            border-color: #d9534f;
+            color: #8b2e2c;
+        }
+        .price-cell {
+            font-variant-numeric: tabular-nums;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-salon mb-4">
+    <div class="container d-flex align-items-center">
+        <span class="navbar-brand brand-mark mb-0">Lumière <span class="brand-accent">Salon</span></span>
+        <span class="navbar-text small text-muted">Service management</span>
+        <a th:href="@{/admin}" class="btn btn-salon-primary rounded-pill ms-auto">Return to Dashboard</a>
+    </div>
+</nav>
+
+<div class="container pb-5">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-3 mb-4">
+        <div>
+            <h1 class="page-title h3 mb-1">Salon services</h1>
+            <p class="text-muted small mb-0">Browse, edit, or remove offerings. Add new treatments anytime.</p>
+        </div>
+        <a th:if="${session.staffRole == 'MANAGER'}"
+           th:href="@{/services(action='new')}" class="btn btn-salon-primary rounded-pill">
+            Add new service
+        </a>
+    </div>
+
+    <div class="card card-glass overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-salon table-hover align-middle mb-0">
+                    <thead>
+                    <tr>
+                        <th class="ps-4">ID</th>
+                        <th>Type</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th class="text-end">Base price</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(services)}">
+                        <td colspan="6" class="text-center text-muted py-5">
+                            <span th:if="${session.staffRole == 'MANAGER'}">No services yet. Add your first service to get started.</span>
+                            <span th:if="${session.staffRole != 'MANAGER'}">No services yet.</span>
+                        </td>
+                    </tr>
+                    <tr th:each="service : ${services}">
+                        <td class="ps-4 text-muted" th:text="${service.serviceId}"></td>
+                        <td>
+                            <span class="badge rounded-pill badge-type-package"
+                                  th:if="${service instanceof T(com.example.beautysalonreview.PackageService)}">Package</span>
+                            <span class="badge rounded-pill badge-type-standard"
+                                  th:unless="${service instanceof T(com.example.beautysalonreview.PackageService)}">Standard</span>
+                        </td>
+                        <td class="fw-medium" th:text="${service.name}"></td>
+                        <td class="text-muted small" style="max-width: 280px;">
+                            <span class="d-inline-block text-truncate w-100"
+                                  th:title="${service.description}"
+                                  th:text="${service.description}"></span>
+                        </td>
+                        <td class="text-end price-cell" th:text="'LKR ' + ${#numbers.formatDecimal(service.basePrice, 1, 2)}"></td>
+                        <td class="text-end pe-4">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a th:if="${session.staffRole == 'MANAGER'}"
+                                   th:href="@{/services(action='edit',serviceId=${service.serviceId})}"
+                                   class="btn btn-outline-secondary btn-action-edit rounded-start-pill px-3">Edit</a>
+                                <a th:if="${session.staffRole == 'MANAGER'}"
+                                   th:href="@{/services(action='delete',serviceId=${service.serviceId})}"
+                                   class="btn btn-outline-secondary btn-action-delete rounded-end-pill px-3"
+                                   onclick="return confirm('Delete this service?');">Delete</a>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>My Lumière Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body style="background-color: #fdf7f8;">
+
+    <nav class="navbar navbar-expand-lg shadow-sm" style="background-color: #d8a4b1;">
+        <div class="container">
+            <a class="navbar-brand fs-3 fw-bold text-white" href="/">LUMIÈRE</a>
+            <div class="d-flex">
+                <a href="/logout" class="btn btn-light" style="color: #d8a4b1; border-radius: 50px; font-weight: bold;">Sign Out</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h2 style="color: #6d4c53;" class="mb-4">Welcome back, <span th:text="${userName}">Client</span>!</h2>
+        <p class="text-muted">Manage your upcoming beauty experiences below.</p>
+
+        <div class="card border-0 shadow-sm mt-4" style="border-radius: 15px;">
+            <div class="card-header text-white p-3" style="background-color: #c48c9a; border-radius: 15px 15px 0 0;">
+                <h4 class="mb-0">My Upcoming Appointments</h4>
+            </div>
+            <div class="card-body">
+                <table class="table table-hover mt-3">
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="appt : ${myAppointments}">
+                            <td th:text="${appt.serviceName}">Facial</td>
+                            <td th:text="${appt.appointmentDate}">2026-04-15</td>
+                            <td th:text="${appt.formattedAppointmentTime}">02:00 PM</td>
+                            <td><span class="badge bg-success" th:text="${appt.status}">Confirmed</span></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(myAppointments)}">
+                            <td colspan="4" class="text-center text-muted py-4">You have no upcoming appointments. Time to book one!</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="d-flex justify-content-end gap-3 mt-4">
+            <a th:href="@{/public-review}" class="btn bg-white px-4 py-2 shadow-sm fw-bold" style="color: #d8a4b1; border: 2px solid #d8a4b1; border-radius: 50px;">Leave a Review</a>
+            <a th:href="@{/appointments(action='public-book')}" class="btn text-white px-5 py-2 shadow-sm fw-bold" style="background-color: #d8a4b1; border-radius: 50px;">Book an Appointment</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customers | Luxe Salon</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(160deg, #fff9fb 0%, #fdf4f7 50%, #f9eef3 100%);
+            min-height: 100vh;
+            color: #5f4a55;
+        }
+        .panel {
+            border: none;
+            border-radius: 1rem;
+            background-color: #fffdfd;
+            box-shadow: 0 1rem 2rem rgba(173, 127, 141, 0.16);
+            overflow: hidden;
+        }
+        .panel-header {
+            background: linear-gradient(135deg, #e4b7c2 0%, #d9a5b3 100%);
+            color: #fff;
+            padding: 1.6rem 2rem;
+        }
+        .table {
+            color: #5f4a55;
+        }
+        .table thead th {
+            background-color: #f2d7df !important;
+            color: #7a5464;
+            border-bottom-color: #e7c7d2;
+        }
+        .table > :not(caption) > * > * {
+            padding: 0.95rem 0.85rem;
+            vertical-align: middle;
+        }
+        .btn-lumiere {
+            background-color: #d9a5b3;
+            border-color: #d9a5b3;
+            color: #fff;
+        }
+        .btn-lumiere:hover {
+            background-color: #c88f9f;
+            border-color: #c88f9f;
+            color: #fff;
+        }
+        .btn-lumiere-outline {
+            border-color: #d9a5b3;
+            color: #a66f82;
+            background-color: #fff9fb;
+        }
+        .btn-lumiere-outline:hover {
+            background-color: #f4dde4;
+            border-color: #d9a5b3;
+            color: #8f596c;
+        }
+        .badge-lumiere {
+            background-color: #f2d7df;
+            color: #8f596c;
+            font-weight: 600;
+            border: 1px solid #e7c7d2;
+        }
+    </style>
+</head>
+<body class="py-5">
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-1">Customers</h1>
+            <p class="text-secondary mb-0">Admin overview of registered salon clients.</p>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <a th:href="@{/admin}" class="btn btn-lumiere-outline btn-lg">Return to Dashboard</a>
+            <a th:if="${session.staffRole == 'MANAGER'}"
+               th:href="@{/customers(action='register')}" class="btn btn-lumiere btn-lg">Register Customer</a>
+        </div>
+    </div>
+
+    <div class="card panel">
+        <div class="panel-header">
+            <h2 class="h4 mb-0">Customer Directory</h2>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Welcome Message</th>
+                        <th scope="col" class="text-end">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${customers != null and !customers.isEmpty()}" th:each="customer : ${customers}">
+                        <td th:text="${customer.userId}"></td>
+                        <td class="fw-semibold" th:text="${customer.name}"></td>
+                        <td th:text="${customer.email}"></td>
+                        <td><span class="badge rounded-pill badge-lumiere" th:text="${customer.customerType}"></span></td>
+                        <td th:text="${customer.welcomeMessage}"></td>
+                        <td class="text-end">
+                            <a th:if="${session.staffRole == 'MANAGER'}"
+                               th:href="@{/customers(action='update', userId=${customer.userId})}"
+                               class="btn btn-lumiere-outline btn-sm me-1">Edit Profile</a>
+                            <a th:if="${session.staffRole == 'MANAGER'}"
+                               th:href="@{/customers(action='delete', userId=${customer.userId})}"
+                               class="btn btn-lumiere-outline btn-sm"
+                               onclick="return confirm('Delete this customer?');">Delete</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${customers == null or customers.isEmpty()}">
+                        <td colspan="6" class="text-center py-5 text-secondary">
+                            <span th:if="${session.staffRole == 'MANAGER'}">No customers registered yet. Click <strong>Register Customer</strong> to get started.</span>
+                            <span th:if="${session.staffRole != 'MANAGER'}">No customers registered yet.</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

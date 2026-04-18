@@ -13,7 +13,7 @@
             <div class="topbar__subtitle"></div>
         </div>
         <nav aria-label="Primary">
-            <a class="btn btn--secondary" href="/">Create</a>
+            <a class="btn btn--secondary" href="/admin">Return to Dashboard</a>
             <a class="btn btn--primary" href="/reviews">Reviews</a>
             <a class="btn" href="/admin/reviews">Admin</a>
         </nav>
@@ -25,31 +25,6 @@
 
         <h2 class="title">All Reviews</h2>
         <p class="subtitle">View customer feedback (filter by service or stylist)</p>
-
-        <div class="notice" th:if="${error == 'invalid'}" aria-label="Invalid token message">
-            <strong>Invalid token.</strong> Please check your Review ID and Token and try again.
-        </div>
-        <div class="notice" th:if="${error == 'notfound'}" aria-label="Review not found message">
-            <strong>Review not found.</strong> Please check your Review ID and try again.
-        </div>
-
-        <div class="manage-card" aria-label="Manage my review">
-            <h3 class="manage-card__title">Manage my review</h3>
-            <p class="manage-card__subtitle">Enter your Review ID and Token to edit or delete your own review.</p>
-            <form class="filter-form" action="/manageReview" method="get">
-                <div class="filter-grid">
-                    <div>
-                        <label for="manage-id">Review ID</label>
-                        <input id="manage-id" type="number" name="id" required placeholder="e.g., 101">
-                    </div>
-                    <div>
-                        <label for="manage-token">Token</label>
-                        <input id="manage-token" type="text" name="token" required placeholder="Paste your token here">
-                    </div>
-                </div>
-                <button class="submit-btn submit-btn--compact" type="submit">Manage</button>
-            </form>
-        </div>
 
         <form class="filter-form" action="/reviews" method="get" aria-label="Filter reviews">
             <div class="filter-grid">
@@ -95,7 +70,7 @@
         </table>
         </div>
 
-        <a class="view-link" href="/">Back to Form</a>
+        <a class="view-link" href="/admin/reviews">Admin Review Control</a>
 
     </div>
 </main>

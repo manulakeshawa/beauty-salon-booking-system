@@ -12,8 +12,9 @@
             <div class="topbar__subtitle"></div>
         </div>
         <nav aria-label="Primary">
-            <a class="btn btn--secondary" href="/">Create</a>
-            <a class="btn btn--primary" href="/reviews">Reviews</a>
+            <a class="btn btn--secondary" href="/admin">Return to Dashboard</a>
+            <a class="btn btn--secondary" href="/review-home">Create</a>
+            <a class="btn btn--secondary" href="/reviews">Reviews</a>
             <a class="btn" href="/admin/reviews">Admin</a>
         </nav>
     </div>
@@ -24,9 +25,8 @@
         <h2 class="title">Edit Review</h2>
         <p class="subtitle">Update the rating and comment while keeping the original customer and service details.</p>
 
-        <form th:action="${formAction}" method="post">
+        <form th:action="@{/admin/updateReview}" method="post">
             <input type="hidden" name="reviewId" th:value="${review.reviewId}">
-            <input type="hidden" name="token" th:value="${token}">
 
             <div class="edit-summary" aria-label="Review details">
                 <p class="edit-summary__row">
@@ -51,22 +51,6 @@
 
             <button class="submit-btn" type="submit">Update</button>
         </form>
-
-        <!-- Customer delete (requires token) -->
-        <a class="view-link delete-link"
-           th:if="${token != null and !#strings.isEmpty(token)}"
-           th:href="@{/deleteReview(id=${review.reviewId}, token=${token})}"
-           onclick="return confirm('Delete your review permanently?');">
-            Delete my review
-        </a>
-
-        <!-- Admin delete (no token) -->
-        <a class="view-link delete-link"
-           th:if="${token == null or #strings.isEmpty(token)}"
-           th:href="@{/admin/deleteReview(id=${review.reviewId})}"
-           onclick="return confirm('Delete this review as admin?');">
-            Delete (admin)
-        </a>
 
         <a class="view-link" href="/reviews">Back</a>
     </div>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reschedule Appointment</title>
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+            crossorigin="anonymous">
+    <style>
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at top left, #fff9fb 0%, #fdf4f7 45%, #f9eef3 100%);
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: #5f4a55;
+        }
+
+        .update-card {
+            border: 0;
+            border-radius: 1rem;
+            background: rgba(255, 253, 253, 0.96);
+            box-shadow: 0 1rem 2.25rem rgba(173, 127, 141, 0.16);
+            backdrop-filter: blur(2px);
+        }
+
+        .form-title {
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            color: #7a5464;
+        }
+
+        .form-subtitle {
+            color: #9a7282;
+            font-size: 0.95rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #7a5464;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 0.65rem;
+            border-color: #e7c7d2;
+            padding: 0.65rem 0.85rem;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #d9a5b3;
+            box-shadow: 0 0 0 0.2rem rgba(217, 165, 179, 0.2);
+        }
+
+        .btn-salon {
+            background: linear-gradient(135deg, #e4b7c2 0%, #d9a5b3 100%);
+            border: 1px solid #d9a5b3;
+            border-radius: 999px;
+            font-weight: 600;
+            padding: 0.7rem 1.5rem;
+            color: #fff;
+        }
+
+        .btn-salon:hover {
+            background: linear-gradient(135deg, #dcaab8 0%, #c88f9f 100%);
+            border-color: #c88f9f;
+            color: #fff;
+        }
+
+        .btn-outline-salon {
+            border-radius: 999px;
+            border: 1px solid #d9a5b3;
+            color: #a66f82;
+            background-color: #fff9fb;
+            font-weight: 600;
+            padding: 0.7rem 1.5rem;
+        }
+
+        .btn-outline-salon:hover {
+            background-color: #f4dde4;
+            color: #8f596c;
+            border-color: #d9a5b3;
+        }
+    </style>
+</head>
+<body>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-xl-6">
+            <div class="card update-card">
+                <div class="card-body p-4 p-md-5">
+                    <h2 class="form-title mb-2">Reschedule Appointment</h2>
+                    <p class="form-subtitle mb-4">Update the date, time, and status for this appointment.</p>
+
+                    <form th:action="@{/appointments(action='update')}" method="post">
+                        <input type="hidden" name="appointmentId" th:value="${appointment.appointmentId}">
+
+                        <div class="mb-3">
+                            <label for="appointmentDate" class="form-label">Appointment Date</label>
+                            <input type="date" class="form-control" id="appointmentDate" name="appointmentDate"
+                                   th:value="${appointment.appointmentDate}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="appointmentTime" class="form-label">Appointment Time</label>
+                            <input type="time" class="form-control" id="appointmentTime" name="appointmentTime"
+                                   th:value="${appointment.appointmentTime}" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status" required>
+                                <option value="Pending" th:selected="${appointment.status == 'Pending'}">Pending</option>
+                                <option value="Confirmed" th:selected="${appointment.status == 'Confirmed'}">Confirmed</option>
+                                <option value="Rescheduled" th:selected="${appointment.status == 'Rescheduled'}">Rescheduled</option>
+                                <option value="Cancelled" th:selected="${appointment.status == 'Cancelled'}">Cancelled</option>
+                            </select>
+                        </div>
+
+                        <div class="d-flex flex-column flex-sm-row gap-2 justify-content-end">
+                            <a th:href="@{/appointments(action='list')}" class="btn btn-outline-salon">Back</a>
+                            <button type="submit" class="btn btn-salon">Update Appointment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

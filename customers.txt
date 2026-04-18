@@ -1,0 +1,7 @@
+1001,Amaya Fernando,amaya.f@email.com,amaya123,Premium
+1002,Dineth Perera,dineth.p@email.com,dineth678,Regular
+1003,Kavindi Silva,kavindi.s@email.com,kavindi@234,Regular
+1004,Roshan Jayawardena,roshan.j@email.com,roshan_3d,Regular
+1005,Nethmi De Silva,nethmi.dk@email.com,$nethmi45,Premium
+1006,Sudeera Shasanka,hpvictus753@gmail.com,@Su12red3,Premium
+1007,Sarah-Jane De Silva,sarah.jane+test@salonweb.com,TestAccount1!,Regular

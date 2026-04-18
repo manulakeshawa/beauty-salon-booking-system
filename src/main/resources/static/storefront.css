@@ -1,0 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap');
+
+body {
+    font-family: 'Lato', sans-serif;
+    background-color: #fdf7f8;
+}
+
+h1, h2, h3, .navbar-brand {
+    font-family: 'Playfair Display', serif;
+}
+
+/* Hero Section */
+.hero-section {
+    height: 100vh;
+    background: linear-gradient(rgba(216, 164, 177, 0.4), rgba(216, 164, 177, 0.7)), url('https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1974&auto=format&fit=crop') no-repeat center center/cover;
+    padding-top: 80px;
+}
+
+.hero-content {
+    animation: fadeIn 2s ease-in-out;
+}
+
+/* Custom Buttons */
+.btn-lumiere {
+    background-color: #d8a4b1;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+}
+
+.btn-lumiere:hover {
+    background-color: #c48c9a;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(216, 164, 177, 0.4);
+}
+
+.btn-lumiere-light {
+    background-color: white;
+    color: #d8a4b1;
+    border: 2px solid white;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+}
+
+.btn-lumiere-light:hover {
+    background-color: transparent;
+    color: white;
+    border-color: white;
+    transform: translateY(-3px);
+}
+
+/* Dynamic Service Cards */
+.service-card {
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+    overflow: hidden;
+    background-color: white !important; 
+}
+
+.service-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(216, 164, 177, 0.3) !important;
+}
+
+.service-image {
+    height: 250px;
+    width: 100%;
+    object-fit: cover;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
