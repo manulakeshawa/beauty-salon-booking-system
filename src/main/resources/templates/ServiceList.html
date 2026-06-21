@@ -91,8 +91,8 @@
                         <td class="ps-4 text-muted small" th:text="${service.serviceId}"></td>
                         <td>
                                 <span class="badge rounded-pill"
-                                      th:classappend="${service instanceof T(com.example.beautysalonreview.model.PackageService) ? 'badge-package' : 'badge-standard'}"
-                                      th:text="${service instanceof T(com.example.beautysalonreview.model.PackageService) ? 'Package' : 'Standard'}">
+                                      th:classappend="${service instanceof T(com.manula.beautysalon.model.PackageService) ? 'badge-package' : 'badge-standard'}"
+                                      th:text="${service instanceof T(com.manula.beautysalon.model.PackageService) ? 'Package' : 'Standard'}">
                                 </span>
                         </td>
                         <td class="fw-bold" th:text="${service.name}"></td>
