@@ -1,28 +1,49 @@
 package com.manula.beautysalon.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+
 /**
  * Base class representing a customer review for a beauty salon service.
  */
+@Entity
+@Table(name = "reviews")
 public class Review {
-    private int reviewId;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "review_id")
+    private Integer reviewId;
+
+    @Column(nullable = false)
     private String customerName;
+
+    @Column(nullable = false)
     private String serviceName;
+
     private String stylistName;
-    private int rating;                 // Expected range: 1–5
+    private int rating;
+
+    @Lob
     private String comment;
+
+    @Column(length = 1000)
     private String ownerToken;
 
-    // NEW: Boolean flag to determine if the review is verified by an admin
     private boolean verified;
 
-    // Default constructor
     public Review() {
         this.ownerToken = "";
-        this.verified = false; // Defaults to unverified (Public)
+        this.verified = false;
     }
 
-    // Parameterized constructor (No Stylist)
-    public Review(int reviewId, String customerName, String serviceName, int rating, String comment) {
+    public Review(Integer reviewId, String customerName, String serviceName, int rating, String comment) {
         this.reviewId = reviewId;
         this.customerName = customerName;
         this.serviceName = serviceName;
@@ -33,8 +54,7 @@ public class Review {
         this.verified = false;
     }
 
-    // Parameterized constructor (With Stylist)
-    public Review(int reviewId, String customerName, String serviceName, String stylistName, int rating, String comment) {
+    public Review(Integer reviewId, String customerName, String serviceName, String stylistName, int rating, String comment) {
         this.reviewId = reviewId;
         this.customerName = customerName;
         this.serviceName = serviceName;
@@ -45,8 +65,7 @@ public class Review {
         this.verified = false;
     }
 
-    // Full constructor (Including Token but NO Verified status - for backwards compatibility)
-    public Review(int reviewId, String customerName, String serviceName, String stylistName, int rating, String comment, String ownerToken) {
+    public Review(Integer reviewId, String customerName, String serviceName, String stylistName, int rating, String comment, String ownerToken) {
         this.reviewId = reviewId;
         this.customerName = customerName;
         this.serviceName = serviceName;
@@ -57,8 +76,7 @@ public class Review {
         this.verified = false;
     }
 
-    // NEW: Ultimate Full Constructor (Including Token AND Verified status)
-    public Review(int reviewId, String customerName, String serviceName, String stylistName, int rating, String comment, String ownerToken, boolean verified) {
+    public Review(Integer reviewId, String customerName, String serviceName, String stylistName, int rating, String comment, String ownerToken, boolean verified) {
         this.reviewId = reviewId;
         this.customerName = customerName;
         this.serviceName = serviceName;
@@ -69,15 +87,21 @@ public class Review {
         this.verified = verified;
     }
 
-    // ==========================================================
-    // GETTERS AND SETTERS
-    // ==========================================================
+    @PrePersist
+    private void applyDefaults() {
+        if (stylistName == null) {
+            stylistName = "";
+        }
+        if (ownerToken == null) {
+            ownerToken = "";
+        }
+    }
 
-    public int getReviewId() {
+    public Integer getReviewId() {
         return reviewId;
     }
 
-    public void setReviewId(int reviewId) {
+    public void setReviewId(Integer reviewId) {
         this.reviewId = reviewId;
     }
 
@@ -129,7 +153,6 @@ public class Review {
         this.ownerToken = ownerToken == null ? "" : ownerToken;
     }
 
-    // NEW: Getters and Setters for the Verified Badge
     public boolean isVerified() {
         return verified;
     }
@@ -137,10 +160,6 @@ public class Review {
     public void setVerified(boolean verified) {
         this.verified = verified;
     }
-
-    // ==========================================================
-    // VIEW HELPERS
-    // ==========================================================
 
     public String getReviewType() {
         return "Review";
@@ -161,6 +180,6 @@ public class Review {
         System.out.println("Stylist Name: " + stylistName);
         System.out.println("Rating: " + rating);
         System.out.println("Comment: " + comment);
-        System.out.println("Verified: " + verified); // Added to display helper
+        System.out.println("Verified: " + verified);
     }
 }

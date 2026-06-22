@@ -1,5 +1,11 @@
 package com.manula.beautysalon.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "stylists")
 public class Stylist extends StaffMember {
 
     private String specialty;
@@ -7,12 +13,23 @@ public class Stylist extends StaffMember {
     private boolean available;
     private String imageFileName;
 
+    public Stylist() {
+        super();
+    }
+
     public Stylist(int userId, String name, String email, String password, String specialty, String level, boolean available, String imageFileName) {
         super(userId, name, email, password);
         this.specialty = specialty;
         this.level = level;
         this.available = available;
         this.imageFileName = imageFileName;
+    }
+
+    @PrePersist
+    private void applyDefaults() {
+        if (imageFileName == null || imageFileName.isBlank()) {
+            imageFileName = "default-stylist.png";
+        }
     }
 
     @Override
@@ -64,7 +81,6 @@ public class Stylist extends StaffMember {
         }
     }
 
-    // FIXED: Stripped raw HTML. Now returns pure string data for the View to handle.
     @Override
     public String getDisplayBadge() {
         return (level != null && !level.isEmpty())
@@ -76,7 +92,6 @@ public class Stylist extends StaffMember {
         return available ? "Available" : "Unavailable";
     }
 
-    // FIXED: Stripped HTML. Now returns pure string data.
     @Override
     public String getDirectoryLevel() {
         return (level != null && !level.isEmpty()) ? level : "Stylist";

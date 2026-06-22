@@ -1,8 +1,17 @@
 package com.manula.beautysalon.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "customers")
 public class Customer extends User {
 
     private String customerType;
+
+    public Customer() {
+        super();
+    }
 
     public Customer(int userId, String name, String email, String password, String customerType) {
         super(userId, name, email, password);
@@ -25,7 +34,6 @@ public class Customer extends User {
         return "Welcome, Regular Client! Thank you for choosing Lumiere Salon.";
     }
 
-    // FIXED: Now returns pure data instead of raw HTML!
     public String getStatusBadge() {
         if ("Premium".equalsIgnoreCase(customerType)) {
             return "Premium";

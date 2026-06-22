@@ -3,9 +3,9 @@ package com.manula.beautysalon.controller;
 import com.manula.beautysalon.model.Review;
 import com.manula.beautysalon.model.SalonService;
 import com.manula.beautysalon.model.Stylist;
-import com.manula.beautysalon.repository.file.ReviewFileManager;
-import com.manula.beautysalon.repository.file.ServiceFileManager;
-import com.manula.beautysalon.repository.file.StylistFileManager;
+import com.manula.beautysalon.service.ReviewService;
+import com.manula.beautysalon.service.SalonServiceService;
+import com.manula.beautysalon.service.StylistService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,56 +17,67 @@ import java.util.List;
 @Controller
 public class HomeController {
 
-    // Connect to your existing Service file manager
-    private final ServiceFileManager serviceFileManager = new ServiceFileManager();
+    private final SalonServiceService salonServiceService;
+    private final ReviewService reviewService;
+    private final StylistService stylistService;
 
-    // Connect to your existing Review file manager
-    private final ReviewFileManager reviewFileManager = new ReviewFileManager();
-
-    // NEW: Connect to your existing Stylist file manager
-    private final StylistFileManager stylistFileManager = new StylistFileManager();
+    public HomeController(SalonServiceService salonServiceService, ReviewService reviewService, StylistService stylistService) {
+        this.salonServiceService = salonServiceService;
+        this.reviewService = reviewService;
+        this.stylistService = stylistService;
+    }
 
     @GetMapping("/")
     public String showStorefront(Model model) {
-
-        // 1. Fetch Live Services
-        try {
-            List<SalonService> liveServices = serviceFileManager.readAllServices();
-            model.addAttribute("services", liveServices);
-        } catch (Exception e) {
-            // If the file is empty or fails, send an empty list so it doesn't crash
-            model.addAttribute("services", new ArrayList<>());
-        }
-
-        // 2. Fetch Live Reviews
-        try {
-            List<Review> liveReviews = reviewFileManager.readAllReviews();
-            model.addAttribute("reviews", liveReviews);
-        } catch (Exception e) {
-            // If the file is empty or fails, send an empty list
-            model.addAttribute("reviews", new ArrayList<>());
-        }
-
-        // 3. NEW: Fetch Live Stylists
-        try {
-            List<Stylist> liveStylists = stylistFileManager.readAllStylists();
-            model.addAttribute("stylists", liveStylists);
-        } catch (Exception e) {
-            // If the file is empty or fails, send an empty list
-            model.addAttribute("stylists", new ArrayList<>());
-        }
-
-        return "index"; // This tells Spring Boot to look for index.html in the templates folder
+        model.addAttribute("services", loadServices());
+        model.addAttribute("reviews", loadStorefrontReviews());
+        model.addAttribute("stylists", loadStylists());
+        return "index";
     }
 
-    // ==========================================================
-    // ROUTE: The secure admin dashboard
-    // ==========================================================
     @GetMapping("/admin")
     public String showAdminDashboard(HttpSession session) {
         if (session.getAttribute("staffRole") == null) {
             return "redirect:/staff-login";
         }
-        return "admin-dashboard"; // This tells Spring Boot to load your new admin-dashboard.html
+        return "admin-dashboard";
+    }
+
+    private List<SalonService> loadServices() {
+        try {
+            return salonServiceService.readAllServices();
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+    private List<Review> loadStorefrontReviews() {
+        try {
+            List<Review> verifiedReviews = reviewService.getVerifiedReviews();
+            if (!verifiedReviews.isEmpty()) {
+                return verifiedReviews;
+            }
+        } catch (Exception ignored) {
+        }
+        return fallbackTestimonials();
+    }
+
+    private List<Stylist> loadStylists() {
+        try {
+            return stylistService.readAllStylists();
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+    private List<Review> fallbackTestimonials() {
+        List<Review> reviews = new ArrayList<>();
+        reviews.add(new Review(0, "Amaya Fernando", "Lumiere Signature Facial", "Nalika", 5,
+                "Absolutely incredible experience. My skin has never felt better!", "", true));
+        reviews.add(new Review(0, "Dineth Perera", "Classic Gentlemen's Grooming", "Kamindu", 5,
+                "A true professional service with a calm, polished salon experience.", "", true));
+        reviews.add(new Review(0, "Kavindi Silva", "Bridal Hair & Makeup Package", "Kasun", 5,
+                "The team made the whole appointment feel effortless and beautifully personal.", "", true));
+        return reviews;
     }
 }

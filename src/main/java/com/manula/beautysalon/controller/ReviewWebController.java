@@ -1,8 +1,8 @@
 package com.manula.beautysalon.controller;
 
 import com.manula.beautysalon.model.Review;
-import com.manula.beautysalon.repository.file.ServiceFileManager;
 import com.manula.beautysalon.service.ReviewService;
+import com.manula.beautysalon.service.SalonServiceService;
 import com.manula.beautysalon.util.SecurityUtils;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
@@ -11,26 +11,18 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.io.IOException;
 import java.util.UUID;
 
-/**
- * Spring MVC controller that maps HTTP requests to review-related Thymeleaf views.
- */
 @Controller
 public class ReviewWebController {
 
     private final ReviewService reviewService;
-    private final ServiceFileManager serviceFileManager;
+    private final SalonServiceService salonServiceService;
 
-    public ReviewWebController(ReviewService reviewService) {
+    public ReviewWebController(ReviewService reviewService, SalonServiceService salonServiceService) {
         this.reviewService = reviewService;
-        this.serviceFileManager = new ServiceFileManager();
+        this.salonServiceService = salonServiceService;
     }
-
-    // ==========================================================
-    // PUBLIC REVIEW ROUTING
-    // ==========================================================
 
     @GetMapping("/public-review")
     public String showPublicReviewPage(HttpSession session, Model model) {
@@ -41,13 +33,7 @@ public class ReviewWebController {
         }
 
         model.addAttribute("customerName", loggedInName);
-
-        try {
-            model.addAttribute("services", serviceFileManager.readAllServices());
-        } catch (IOException e) {
-            System.err.println("Error loading services for the review form: " + e.getMessage());
-        }
-
+        model.addAttribute("services", salonServiceService.readAllServices());
         return "public-review-form";
     }
 
@@ -65,34 +51,24 @@ public class ReviewWebController {
             return "redirect:/customers?action=login";
         }
 
-        // Staff cannot submit public reviews unless they are a manager
         if (session.getAttribute("staffRole") != null && !SecurityUtils.isManager(session)) {
             return "redirect:/admin?error=unauthorized";
         }
 
-        int newId = reviewService.generateNextReviewId();
-        String ownerToken = UUID.randomUUID().toString();
-
-        // Newly submitted reviews default to unverified
         Review review = new Review(
-                newId,
+                0,
                 loggedInCustomerName,
                 serviceName,
                 stylistName,
                 rating,
                 comment,
-                ownerToken,
+                UUID.randomUUID().toString(),
                 false
         );
 
         reviewService.addReview(review);
-
         return "redirect:/my-portal";
     }
-
-    // ==========================================================
-    // ADMIN / GENERAL ROUTING
-    // ==========================================================
 
     @GetMapping("/reviews")
     public String showReviewsPage(
@@ -105,7 +81,6 @@ public class ReviewWebController {
         model.addAttribute("service", service == null ? "" : service);
         model.addAttribute("stylist", stylist == null ? "" : stylist);
         model.addAttribute("error", error == null ? "" : error);
-
         return "review-list";
     }
 
@@ -123,7 +98,6 @@ public class ReviewWebController {
         model.addAttribute("reviews", reviewService.getFilteredReviews(service, stylist));
         model.addAttribute("service", service == null ? "" : service);
         model.addAttribute("stylist", stylist == null ? "" : stylist);
-
         return "admin-review-control";
     }
 
@@ -138,7 +112,6 @@ public class ReviewWebController {
         }
 
         reviewService.toggleReviewVerification(id);
-
         return "redirect:/admin/reviews";
     }
 
@@ -161,10 +134,6 @@ public class ReviewWebController {
 
         return "redirect:/admin/reviews";
     }
-
-    // ==========================================================
-    // CUSTOMER PORTAL - SELF-EDIT LOGIC
-    // ==========================================================
 
     @GetMapping("/editReview")
     public String showEditPage(

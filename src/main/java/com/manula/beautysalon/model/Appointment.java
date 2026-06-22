@@ -1,17 +1,39 @@
 package com.manula.beautysalon.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
+@Entity
+@Table(name = "appointments")
 public class Appointment {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "appointment_id")
     private int appointmentId;
+
+    @Column(nullable = false)
     private String customerName;
+
+    @Column(nullable = false)
     private String serviceName;
+
     private String stylistName;
     private String appointmentDate;
     private String appointmentTime;
     private String status;
+
+    public Appointment() {
+        this.status = "Pending";
+    }
 
     public Appointment(int appointmentId, String customerName, String serviceName,
                        String stylistName, String appointmentDate, String appointmentTime) {
@@ -24,7 +46,16 @@ public class Appointment {
         this.status = "Pending";
     }
 
-    // --- ACCESSORS ---
+    @PrePersist
+    private void applyDefaults() {
+        if (status == null || status.isBlank()) {
+            status = "Pending";
+        }
+        if (stylistName == null || stylistName.isBlank()) {
+            stylistName = "Unassigned";
+        }
+    }
+
     public int getAppointmentId() {
         return appointmentId;
     }
@@ -81,9 +112,6 @@ public class Appointment {
         this.status = status;
     }
 
-    // --- LOGIC HELPERS ---
-
-    // ADDED BACK: For specific rescheduling logic if needed
     public void reschedule(String newDate, String newTime) {
         this.appointmentDate = newDate;
         this.appointmentTime = newTime;
@@ -91,7 +119,9 @@ public class Appointment {
     }
 
     public String getFormattedAppointmentTime() {
-        if (appointmentTime == null || appointmentTime.trim().isEmpty()) return "TBD";
+        if (appointmentTime == null || appointmentTime.trim().isEmpty()) {
+            return "TBD";
+        }
         try {
             LocalTime time = LocalTime.parse(this.appointmentTime);
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm a");

@@ -1,13 +1,22 @@
 package com.manula.beautysalon.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "employees")
 public class Employee extends StaffMember {
 
     private String username;
-    private String role;           // MANAGER or STYLIST
-    private String level;          // Junior, Senior, Lead, etc.
+    private String role;
+    private String level;
     private String specialty;
     private String welcomeMessage;
     private String availabilityStatus;
+
+    public Employee() {
+        super();
+    }
 
     public Employee(int userId, String username, String password, String fullName,
                     String email, String role, String level, String specialty,
@@ -82,7 +91,6 @@ public class Employee extends StaffMember {
         this.welcomeMessage = welcomeMessage;
     }
 
-    // FIXED: Stripped HTML. Now returns pure string data for the View to handle.
     @Override
     public String getDisplayBadge() {
         if ("MANAGER".equalsIgnoreCase(role)) {
@@ -91,7 +99,6 @@ public class Employee extends StaffMember {
         return getLevel();
     }
 
-    // FIXED: Stripped HTML. Now returns pure string data for the View to handle.
     @Override
     public String getDirectoryLevel() {
         if ("MANAGER".equalsIgnoreCase(role)) {

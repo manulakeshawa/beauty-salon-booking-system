@@ -1,22 +1,48 @@
 package com.manula.beautysalon.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.DiscriminatorType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "salon_services")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "service_type", discriminatorType = DiscriminatorType.STRING)
 public abstract class SalonService {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "service_id")
     private int serviceId;
+
+    @Column(nullable = false)
     private String name;
+
+    @Lob
     private String description;
+
     private double basePrice;
     private String imageFileName;
-    private String stylistName; // NEW: Added link to the Stylist
+    private String stylistName;
 
-    // Updated Constructor
+    protected SalonService() {
+    }
+
     public SalonService(int serviceId, String name, String description, double basePrice, String imageFileName, String stylistName) {
         this.serviceId = serviceId;
         this.name = name;
         this.description = description;
         this.basePrice = basePrice;
         this.imageFileName = imageFileName;
-        this.stylistName = stylistName; // NEW
+        this.stylistName = stylistName;
     }
 
     public int getServiceId() {
@@ -59,13 +85,16 @@ public abstract class SalonService {
         this.imageFileName = imageFileName;
     }
 
-    // NEW: Getter and Setter for Stylist Name
     public String getStylistName() {
         return stylistName;
     }
 
     public void setStylistName(String stylistName) {
         this.stylistName = stylistName;
+    }
+
+    public String getServiceType() {
+        return this instanceof PackageService ? "Package" : "Standard";
     }
 
     public abstract double calculateFinalPrice();

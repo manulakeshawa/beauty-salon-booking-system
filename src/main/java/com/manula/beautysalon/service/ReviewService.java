@@ -1,7 +1,7 @@
 package com.manula.beautysalon.service;
 
 import com.manula.beautysalon.model.Review;
-import com.manula.beautysalon.repository.file.ReviewFileManager;
+import com.manula.beautysalon.repository.ReviewRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -10,48 +10,52 @@ import java.util.List;
 @Service
 public class ReviewService {
 
-    private final ReviewFileManager reviewFileManager = new ReviewFileManager();
+    private final ReviewRepository reviewRepository;
 
-    public void addReview(Review review) {
-        List<Review> reviews = reviewFileManager.readAllReviews();
-        reviews.add(review);
-        reviewFileManager.writeAllReviews(reviews);
+    public ReviewService(ReviewRepository reviewRepository) {
+        this.reviewRepository = reviewRepository;
+    }
+
+    public Review addReview(Review review) {
+        review.setReviewId(null);
+        return reviewRepository.save(review);
     }
 
     public void updateReview(int reviewId, int newRating, String newComment) {
-        List<Review> reviews = reviewFileManager.readAllReviews();
-
-        for (Review review : reviews) {
-            if (review.getReviewId() == reviewId) {
-                review.setRating(newRating);
-                review.setComment(newComment);
-                break;
-            }
-        }
-
-        reviewFileManager.writeAllReviews(reviews);
+        reviewRepository.findById(reviewId).ifPresent(review -> {
+            review.setRating(newRating);
+            review.setComment(newComment);
+            reviewRepository.save(review);
+        });
     }
 
     public void deleteReview(int reviewId) {
-        List<Review> reviews = reviewFileManager.readAllReviews();
-        reviews.removeIf(review -> review.getReviewId() == reviewId);
-        reviewFileManager.writeAllReviews(reviews);
+        if (reviewRepository.existsById(reviewId)) {
+            reviewRepository.deleteById(reviewId);
+        }
     }
 
     public List<Review> getAllReviews() {
-        return reviewFileManager.readAllReviews();
+        return reviewRepository.findAllByOrderByReviewIdAsc();
+    }
+
+    public List<Review> getVerifiedReviews() {
+        return reviewRepository.findByVerifiedTrueOrderByReviewIdAsc();
+    }
+
+    public List<Review> getReviewsByCustomerName(String customerName) {
+        if (customerName == null || customerName.isBlank()) {
+            return List.of();
+        }
+        return reviewRepository.findByCustomerNameIgnoreCaseOrderByReviewIdAsc(customerName);
     }
 
     public Review getReviewById(int reviewId) {
-        return reviewFileManager.readAllReviews()
-                .stream()
-                .filter(review -> review.getReviewId() == reviewId)
-                .findFirst()
-                .orElse(null);
+        return reviewRepository.findById(reviewId).orElse(null);
     }
 
     public List<Review> getFilteredReviews(String service, String stylist) {
-        List<Review> reviews = reviewFileManager.readAllReviews();
+        List<Review> reviews = getAllReviews();
 
         String serviceSearch = service == null ? "" : service.trim().toLowerCase();
         String stylistSearch = stylist == null ? "" : stylist.trim().toLowerCase();
@@ -84,23 +88,15 @@ public class ReviewService {
     }
 
     public void toggleReviewVerification(int reviewId) {
-        List<Review> reviews = reviewFileManager.readAllReviews();
-
-        for (Review review : reviews) {
-            if (review.getReviewId() == reviewId) {
-                review.setVerified(!review.isVerified());
-                break;
-            }
-        }
-
-        reviewFileManager.writeAllReviews(reviews);
+        reviewRepository.findById(reviewId).ifPresent(review -> {
+            review.setVerified(!review.isVerified());
+            reviewRepository.save(review);
+        });
     }
 
     public int generateNextReviewId() {
-        try {
-            return reviewFileManager.generateNextReviewId();
-        } catch (Exception e) {
-            return 5001;
-        }
+        return reviewRepository.findTopByOrderByReviewIdDesc()
+                .map(review -> review.getReviewId() + 1)
+                .orElse(1);
     }
 }
