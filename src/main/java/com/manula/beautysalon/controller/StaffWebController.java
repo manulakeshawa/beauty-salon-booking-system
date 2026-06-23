@@ -3,14 +3,17 @@ package com.manula.beautysalon.controller;
 import com.manula.beautysalon.model.Appointment;
 import com.manula.beautysalon.model.Employee;
 import com.manula.beautysalon.model.Stylist;
+import com.manula.beautysalon.service.DuplicateEmailException;
 import com.manula.beautysalon.service.AppointmentService;
 import com.manula.beautysalon.service.StaffService;
+import com.manula.beautysalon.service.StylistService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -19,10 +22,12 @@ public class StaffWebController {
 
     private final StaffService staffService;
     private final AppointmentService appointmentService;
+    private final StylistService stylistService;
 
-    public StaffWebController(StaffService staffService, AppointmentService appointmentService) {
+    public StaffWebController(StaffService staffService, AppointmentService appointmentService, StylistService stylistService) {
         this.staffService = staffService;
         this.appointmentService = appointmentService;
+        this.stylistService = stylistService;
     }
 
     @GetMapping("/staff-login")
@@ -41,7 +46,8 @@ public class StaffWebController {
         if (employee != null && "MANAGER".equalsIgnoreCase(employee.getRole())) {
             session.setAttribute("staffRole", employee.getRole());
             session.setAttribute("staffName", employee.getFullName());
-            session.setAttribute("staffEmail", username);
+            session.setAttribute("staffEmail", employee.getEmail());
+            session.setAttribute("staffUsername", employee.getUsername());
             return "redirect:/admin";
         }
 
@@ -50,6 +56,7 @@ public class StaffWebController {
             session.setAttribute("staffRole", "STYLIST");
             session.setAttribute("staffName", stylist.getName());
             session.setAttribute("staffEmail", stylist.getEmail());
+            session.setAttribute("staffUserId", stylist.getUserId());
             return "redirect:/stylist-portal";
         }
 
@@ -72,6 +79,88 @@ public class StaffWebController {
         model.addAttribute("mySchedule", mySchedule);
 
         return "stylist-portal";
+    }
+
+    @GetMapping("/stylist-profile")
+    public String showStylistProfile(HttpSession session, Model model) {
+        if (!"STYLIST".equalsIgnoreCase((String) session.getAttribute("staffRole"))) {
+            return "redirect:/staff-login";
+        }
+
+        String stylistEmail = (String) session.getAttribute("staffEmail");
+        Stylist stylist = stylistService.findByEmail(stylistEmail);
+        if (stylist == null) {
+            session.invalidate();
+            return "redirect:/staff-login";
+        }
+
+        model.addAttribute("stylist", stylist);
+        return "stylist-profile";
+    }
+
+    @PostMapping("/stylist-profile")
+    public String updateStylistProfile(
+            @RequestParam String action,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String currentPassword,
+            @RequestParam(required = false) String newPassword,
+            @RequestParam(required = false) String confirmPassword,
+            HttpSession session,
+            RedirectAttributes redirectAttributes
+    ) {
+        if (!"STYLIST".equalsIgnoreCase((String) session.getAttribute("staffRole"))) {
+            return "redirect:/staff-login";
+        }
+
+        String stylistEmail = (String) session.getAttribute("staffEmail");
+        try {
+            if ("update-profile".equalsIgnoreCase(action)) {
+                Stylist updated = stylistService.updateStylistProfile(stylistEmail, name, email);
+                session.setAttribute("staffEmail", updated.getEmail());
+                session.setAttribute("staffName", updated.getName());
+                session.setAttribute("staffUserId", updated.getUserId());
+                redirectAttributes.addFlashAttribute("successMessage", "Your profile has been successfully updated.");
+            } else if ("change-password".equalsIgnoreCase(action)) {
+                stylistService.changeStylistPassword(stylistEmail, currentPassword, newPassword, confirmPassword);
+                redirectAttributes.addFlashAttribute("successMessage", "Your password has been successfully updated.");
+            }
+        } catch (DuplicateEmailException | IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+
+        return "redirect:/stylist-profile";
+    }
+
+    @GetMapping("/admin-password")
+    public String showAdminPasswordForm(HttpSession session) {
+        if (!"MANAGER".equalsIgnoreCase((String) session.getAttribute("staffRole"))) {
+            return "redirect:/staff-login";
+        }
+        return "admin-password";
+    }
+
+    @PostMapping("/admin-password")
+    public String changeAdminPassword(
+            @RequestParam String currentPassword,
+            @RequestParam String newPassword,
+            @RequestParam String confirmPassword,
+            HttpSession session,
+            RedirectAttributes redirectAttributes
+    ) {
+        if (!"MANAGER".equalsIgnoreCase((String) session.getAttribute("staffRole"))) {
+            return "redirect:/staff-login";
+        }
+
+        String username = (String) session.getAttribute("staffUsername");
+        try {
+            staffService.changeAdminPassword(username, currentPassword, newPassword, confirmPassword);
+            redirectAttributes.addFlashAttribute("successMessage", "Your admin password has been successfully updated.");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+
+        return "redirect:/admin-password";
     }
 
     @GetMapping("/staff-logout")

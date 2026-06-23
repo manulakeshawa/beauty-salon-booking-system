@@ -9,9 +9,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Service
 public class CustomerService {
+
+    private static final int MIN_PASSWORD_LENGTH = 8;
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
 
     private final CustomerRepository customerRepository;
     private final AppointmentRepository appointmentRepository;
@@ -69,6 +73,45 @@ public class CustomerService {
     }
 
     @Transactional
+    public Customer updateCustomerProfile(String currentEmail, String name, String email) {
+        Customer existing = findByEmail(currentEmail);
+        if (existing == null) {
+            throw new IllegalArgumentException("Your customer account could not be found. Please sign in again.");
+        }
+        validateProfile(name, email);
+
+        String previousName = existing.getName();
+        String normalizedEmail = accountEmailService.normalize(email);
+        accountEmailService.assertCustomerEmailAvailable(normalizedEmail, existing.getUserId());
+
+        existing.setName(name.trim());
+        existing.setEmail(normalizedEmail);
+        try {
+            customerRepository.save(existing);
+        } catch (DataIntegrityViolationException ex) {
+            throw new DuplicateEmailException(AccountEmailService.DUPLICATE_EMAIL_MESSAGE, ex);
+        }
+
+        if (hasText(previousName) && !previousName.equalsIgnoreCase(existing.getName())) {
+            appointmentRepository.updateCustomerNameIgnoreCase(previousName, existing.getName());
+            reviewRepository.updateCustomerNameIgnoreCase(previousName, existing.getName());
+        }
+
+        return existing;
+    }
+
+    @Transactional
+    public void changeCustomerPassword(String email, String currentPassword, String newPassword, String confirmPassword) {
+        Customer customer = findByEmail(email);
+        if (customer == null) {
+            throw new IllegalArgumentException("Your customer account could not be found. Please sign in again.");
+        }
+        validatePasswordChange(currentPassword, newPassword, confirmPassword, customer.getPassword());
+        customer.setPassword(passwordService.hash(newPassword));
+        customerRepository.save(customer);
+    }
+
+    @Transactional
     public void deleteCustomer(int userId) {
         customerRepository.findById(userId).ifPresent(customer -> {
             if (hasText(customer.getName())) {
@@ -109,5 +152,29 @@ public class CustomerService {
 
     private boolean hasText(String value) {
         return value != null && !value.isBlank();
+    }
+
+    private void validateProfile(String name, String email) {
+        if (!hasText(name)) {
+            throw new IllegalArgumentException("Please enter your name.");
+        }
+        if (!hasText(email) || !EMAIL_PATTERN.matcher(email.trim()).matches()) {
+            throw new IllegalArgumentException("Please enter a valid email address.");
+        }
+    }
+
+    private void validatePasswordChange(String currentPassword, String newPassword, String confirmPassword, String storedPasswordHash) {
+        if (!hasText(currentPassword)) {
+            throw new IllegalArgumentException("Please enter your current password.");
+        }
+        if (!passwordService.matches(currentPassword, storedPasswordHash)) {
+            throw new IllegalArgumentException("The current password you entered is incorrect.");
+        }
+        if (!hasText(newPassword) || newPassword.length() < MIN_PASSWORD_LENGTH) {
+            throw new IllegalArgumentException("New password must be at least " + MIN_PASSWORD_LENGTH + " characters long.");
+        }
+        if (!newPassword.equals(confirmPassword)) {
+            throw new IllegalArgumentException("New password and confirm password must match.");
+        }
     }
 }

@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class StaffService {
 
+    private static final int MIN_PASSWORD_LENGTH = 8;
+
     private final EmployeeRepository employeeRepository;
     private final StylistService stylistService;
     private final AccountEmailService accountEmailService;
@@ -82,6 +84,30 @@ public class StaffService {
         });
     }
 
+    @Transactional
+    public void changeAdminPassword(String username, String currentPassword, String newPassword, String confirmPassword) {
+        if (!hasText(username)) {
+            throw new IllegalArgumentException("Your admin session has expired. Please sign in again.");
+        }
+
+        Employee employee = employeeRepository.findByUsernameIgnoreCase(username.trim()).orElse(null);
+        if (employee == null && "admin".equalsIgnoreCase(username.trim())) {
+            validatePasswordChange(currentPassword, newPassword, confirmPassword, defaultManagerPasswordHash());
+            Employee manager = defaultManager();
+            manager.setPassword(newPassword);
+            saveEmployee(manager);
+            return;
+        }
+
+        if (employee == null || !"MANAGER".equalsIgnoreCase(employee.getRole())) {
+            throw new IllegalArgumentException("Your admin account could not be found. Please sign in again.");
+        }
+
+        validatePasswordChange(currentPassword, newPassword, confirmPassword, employee.getPassword());
+        employee.setPassword(passwordService.hash(newPassword));
+        employeeRepository.save(employee);
+    }
+
     private Employee defaultManager() {
         return new Employee(
                 0,
@@ -99,5 +125,24 @@ public class StaffService {
 
     private String defaultManagerPasswordHash() {
         return "pbkdf2_sha256$210000$nZjYarRaYRQNlerCO4cmkA==$hXTAKZy0H4jjZC4l9Y8uZUwsj3OuyxGV3f8mM7WHZSM=";
+    }
+
+    private void validatePasswordChange(String currentPassword, String newPassword, String confirmPassword, String storedPasswordHash) {
+        if (!hasText(currentPassword)) {
+            throw new IllegalArgumentException("Please enter your current password.");
+        }
+        if (!passwordService.matches(currentPassword, storedPasswordHash)) {
+            throw new IllegalArgumentException("The current password you entered is incorrect.");
+        }
+        if (!hasText(newPassword) || newPassword.length() < MIN_PASSWORD_LENGTH) {
+            throw new IllegalArgumentException("New password must be at least " + MIN_PASSWORD_LENGTH + " characters long.");
+        }
+        if (!newPassword.equals(confirmPassword)) {
+            throw new IllegalArgumentException("New password and confirm password must match.");
+        }
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 }

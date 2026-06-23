@@ -204,6 +204,10 @@
                 <i class="bi bi-shop me-1"></i>
                 <span class="d-none d-sm-inline">Live Storefront</span>
             </a>
+            <a th:href="@{/admin-password}" th:if="${session.staffRole == 'MANAGER'}" class="btn-nav-top shadow-sm">
+                <i class="bi bi-key me-1"></i>
+                <span class="d-none d-sm-inline">Change Password</span>
+            </a>
             <a th:href="@{/staff-logout}" class="btn-nav-top shadow-sm" style="color:#dc3545;border-color:rgba(220,53,69,.2);">
                 <i class="bi bi-box-arrow-right me-1"></i>
                 <span class="d-none d-sm-inline">Sign Out</span>

@@ -10,9 +10,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Service
 public class StylistService {
+
+    private static final int MIN_PASSWORD_LENGTH = 8;
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
 
     private final StylistRepository stylistRepository;
     private final AppointmentRepository appointmentRepository;
@@ -108,6 +112,46 @@ public class StylistService {
     }
 
     @Transactional
+    public Stylist updateStylistProfile(String currentEmail, String name, String email) {
+        Stylist existing = findByEmail(currentEmail);
+        if (existing == null) {
+            throw new IllegalArgumentException("Your stylist account could not be found. Please sign in again.");
+        }
+        validateProfile(name, email);
+
+        String previousName = existing.getName();
+        String normalizedEmail = accountEmailService.normalize(email);
+        accountEmailService.assertStylistEmailAvailable(normalizedEmail, existing.getUserId());
+
+        existing.setName(name.trim());
+        existing.setEmail(normalizedEmail);
+        try {
+            stylistRepository.save(existing);
+        } catch (DataIntegrityViolationException ex) {
+            throw new DuplicateEmailException(AccountEmailService.DUPLICATE_EMAIL_MESSAGE, ex);
+        }
+
+        if (hasText(previousName) && !previousName.equalsIgnoreCase(existing.getName())) {
+            appointmentRepository.updateStylistNameIgnoreCase(previousName, existing.getName());
+            reviewRepository.updateStylistNameIgnoreCase(previousName, existing.getName());
+            salonServiceRepository.updateStylistNameIgnoreCase(previousName, existing.getName());
+        }
+
+        return existing;
+    }
+
+    @Transactional
+    public void changeStylistPassword(String email, String currentPassword, String newPassword, String confirmPassword) {
+        Stylist stylist = findByEmail(email);
+        if (stylist == null) {
+            throw new IllegalArgumentException("Your stylist account could not be found. Please sign in again.");
+        }
+        validatePasswordChange(currentPassword, newPassword, confirmPassword, stylist.getPassword());
+        stylist.setPassword(passwordService.hash(newPassword));
+        stylistRepository.save(stylist);
+    }
+
+    @Transactional
     public void deleteStylist(int userId) {
         stylistRepository.findById(userId).ifPresent(stylist -> {
             if (hasText(stylist.getName())) {
@@ -150,5 +194,29 @@ public class StylistService {
 
     private boolean hasText(String value) {
         return value != null && !value.isBlank();
+    }
+
+    private void validateProfile(String name, String email) {
+        if (!hasText(name)) {
+            throw new IllegalArgumentException("Please enter your name.");
+        }
+        if (!hasText(email) || !EMAIL_PATTERN.matcher(email.trim()).matches()) {
+            throw new IllegalArgumentException("Please enter a valid email address.");
+        }
+    }
+
+    private void validatePasswordChange(String currentPassword, String newPassword, String confirmPassword, String storedPasswordHash) {
+        if (!hasText(currentPassword)) {
+            throw new IllegalArgumentException("Please enter your current password.");
+        }
+        if (!passwordService.matches(currentPassword, storedPasswordHash)) {
+            throw new IllegalArgumentException("The current password you entered is incorrect.");
+        }
+        if (!hasText(newPassword) || newPassword.length() < MIN_PASSWORD_LENGTH) {
+            throw new IllegalArgumentException("New password must be at least " + MIN_PASSWORD_LENGTH + " characters long.");
+        }
+        if (!newPassword.equals(confirmPassword)) {
+            throw new IllegalArgumentException("New password and confirm password must match.");
+        }
     }
 }

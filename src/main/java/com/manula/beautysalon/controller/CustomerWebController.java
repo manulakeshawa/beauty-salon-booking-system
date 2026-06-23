@@ -98,7 +98,9 @@ public class CustomerWebController {
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String password,
+            @RequestParam(required = false) String currentPassword,
             @RequestParam(required = false) String newPassword,
+            @RequestParam(required = false) String confirmPassword,
             @RequestParam(required = false) String customerType,
             HttpSession session,
             RedirectAttributes redirectAttributes
@@ -122,19 +124,14 @@ public class CustomerWebController {
                 if (loggedInEmail == null) {
                     return "redirect:/customers?action=login";
                 }
-                if (newPassword != null && !newPassword.isBlank()) {
-                    Customer customer = customerService.findByEmail(loggedInEmail);
-                    if (customer != null) {
-                        customer.setPassword(newPassword);
-                        try {
-                            customerService.updateCustomer(customer);
-                        } catch (DuplicateEmailException ex) {
-                            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
-                            return "redirect:/my-portal?passwordStatus=emailConflict";
-                        }
-                    }
+                try {
+                    customerService.changeCustomerPassword(loggedInEmail, currentPassword, newPassword, confirmPassword);
+                } catch (IllegalArgumentException ex) {
+                    redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+                    return "redirect:/customer-profile";
                 }
-                return "redirect:/my-portal?passwordStatus=updated";
+                redirectAttributes.addFlashAttribute("successMessage", "Your password has been successfully updated.");
+                return "redirect:/customer-profile";
 
             case "register":
                 if (!"MANAGER".equals(role)) {
@@ -229,6 +226,56 @@ public class CustomerWebController {
         model.addAttribute("myReviews", myReviews);
 
         return "customer-portal";
+    }
+
+    @GetMapping("/customer-profile")
+    public String showCustomerProfile(HttpSession session, Model model) {
+        String userEmail = (String) session.getAttribute("loggedInCustomerEmail");
+        if (userEmail == null) {
+            return "redirect:/customers?action=login";
+        }
+
+        Customer customer = customerService.findByEmail(userEmail);
+        if (customer == null) {
+            session.invalidate();
+            return "redirect:/customers?action=login";
+        }
+
+        model.addAttribute("customer", customer);
+        return "customer-profile";
+    }
+
+    @PostMapping("/customer-profile")
+    public String updateCustomerProfile(
+            @RequestParam String action,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String currentPassword,
+            @RequestParam(required = false) String newPassword,
+            @RequestParam(required = false) String confirmPassword,
+            HttpSession session,
+            RedirectAttributes redirectAttributes
+    ) {
+        String userEmail = (String) session.getAttribute("loggedInCustomerEmail");
+        if (userEmail == null) {
+            return "redirect:/customers?action=login";
+        }
+
+        try {
+            if ("update-profile".equalsIgnoreCase(action)) {
+                Customer updated = customerService.updateCustomerProfile(userEmail, name, email);
+                session.setAttribute("loggedInCustomerEmail", updated.getEmail());
+                session.setAttribute("loggedInCustomerName", updated.getName());
+                redirectAttributes.addFlashAttribute("successMessage", "Your profile has been successfully updated.");
+            } else if ("change-password".equalsIgnoreCase(action)) {
+                customerService.changeCustomerPassword(userEmail, currentPassword, newPassword, confirmPassword);
+                redirectAttributes.addFlashAttribute("successMessage", "Your password has been successfully updated.");
+            }
+        } catch (DuplicateEmailException | IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+
+        return "redirect:/customer-profile";
     }
 
     @GetMapping("/logout")

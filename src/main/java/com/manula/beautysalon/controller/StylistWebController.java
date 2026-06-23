@@ -86,7 +86,9 @@ public class StylistWebController {
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String password,
+            @RequestParam(required = false) String currentPassword,
             @RequestParam(required = false) String newPassword,
+            @RequestParam(required = false) String confirmPassword,
             @RequestParam(required = false) String specialty,
             @RequestParam(required = false) String level,
             @RequestParam(required = false) Boolean available,
@@ -103,22 +105,17 @@ public class StylistWebController {
         switch (action.toLowerCase()) {
             case "change-password":
                 String loggedInEmail = (String) session.getAttribute("staffEmail");
-                if (loggedInEmail == null) {
+                if (loggedInEmail == null || !"STYLIST".equalsIgnoreCase((String) session.getAttribute("staffRole"))) {
                     return "redirect:/staff-login";
                 }
-                if (newPassword != null && !newPassword.isBlank()) {
-                    Stylist stylist = stylistService.findByEmail(loggedInEmail);
-                    if (stylist != null) {
-                        stylist.setPassword(newPassword);
-                        try {
-                            stylistService.updateStylist(stylist);
-                        } catch (DuplicateEmailException ex) {
-                            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
-                            return "redirect:/stylist-portal?passwordStatus=emailConflict";
-                        }
-                    }
+                try {
+                    stylistService.changeStylistPassword(loggedInEmail, currentPassword, newPassword, confirmPassword);
+                } catch (IllegalArgumentException ex) {
+                    redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+                    return "redirect:/stylist-profile";
                 }
-                return "redirect:/stylist-portal?passwordStatus=updated";
+                redirectAttributes.addFlashAttribute("successMessage", "Your password has been successfully updated.");
+                return "redirect:/stylist-profile";
 
             case "new":
             case "register":
