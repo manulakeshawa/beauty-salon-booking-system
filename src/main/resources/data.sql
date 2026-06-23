@@ -2,69 +2,80 @@
 -- SeedDataInitializer runs this file only when the database has no app data
 -- and the demo-data seed marker has not been recorded.
 -- Each insert is still guarded by a natural key check and INSERT IGNORE.
+-- Account passwords are stored as PBKDF2 hashes. Demo test credentials:
+-- Customers: amaya.f@email.com/amaya123, dineth.p@email.com/dineth678,
+-- kavindi.s@email.com/kavindi@234, roshan.j@email.com/roshan_3d,
+-- nethmi.dk@email.com/$nethmi45, hpvictus753@gmail.com/@Su12red3,
+-- sarah.jane+test@salonweb.com/TestAccount1!, sarah.j@email.com/pass123,
+-- isabellsil12@email.com/bella1234, somakumary@email.com/dutchythin,
+-- ravi.the@email.com/123456, testing@email.com/testing123,
+-- emma@test.com/c, mighara@email.com/mighara1234.
+-- Staff/admin: admin/lumiere2026.
+-- Stylists: Nalika/#nalika@lume, Kasun/#kasun@lume, Kamindu/#kamindu@lume,
+-- Shenali/#shenali@lume, Dinithi/#dinithi@lume, Ruwan/#ruwan@lume, Zara/#zara@lume.
 
 SET NAMES utf8mb4;
 
 -- Customers moved from customers.txt
 INSERT IGNORE INTO `customers` (`user_id`, `name`, `email`, `password`, `customer_type`)
-SELECT 1001, 'Amaya Fernando', 'amaya.f@email.com', 'amaya123', 'Premium'
+SELECT 1001, 'Amaya Fernando', 'amaya.f@email.com', 'pbkdf2_sha256$210000$85xwq2QxgDHAW16dFEydDQ==$TvRbYbKFyRbvSlwDUxZ6zd4/RUfSNUk3d6TzRjk2G1g=', 'Premium'
 WHERE NOT EXISTS (SELECT 1 FROM `customers` WHERE LOWER(`email`) = LOWER('amaya.f@email.com'));
 
 INSERT IGNORE INTO `customers` (`user_id`, `name`, `email`, `password`, `customer_type`)
-SELECT 1002, 'Dineth Perera', 'dineth.p@email.com', 'dineth678', 'Regular'
+SELECT 1002, 'Dineth Perera', 'dineth.p@email.com', 'pbkdf2_sha256$210000$8EOf0dBDvSxQ4USTbNxbjA==$IcAk5vA2+bY1/umvZ6st9Bmf0sRjiVpuoyBLhwaIfuE=', 'Regular'
 WHERE NOT EXISTS (SELECT 1 FROM `customers` WHERE LOWER(`email`) = LOWER('dineth.p@email.com'));
 
 INSERT IGNORE INTO `customers` (`user_id`, `name`, `email`, `password`, `customer_type`)
-SELECT 1003, 'Kavindi Silva', 'kavindi.s@email.com', 'kavindi@234', 'Regular'
+SELECT 1003, 'Kavindi Silva', 'kavindi.s@email.com', 'pbkdf2_sha256$210000$yN2/N7E9DXYvflU4nBjUEA==$eXEFDX716Ho7TuymWmQNkXocQjQ/KvJz4xMv/18u1Zo=', 'Regular'
 WHERE NOT EXISTS (SELECT 1 FROM `customers` WHERE LOWER(`email`) = LOWER('kavindi.s@email.com'));
 
 INSERT IGNORE INTO `customers` (`user_id`, `name`, `email`, `password`, `customer_type`)
-SELECT 1004, 'Roshan Jayawardena', 'roshan.j@email.com', 'roshan_3d', 'Regular'
+SELECT 1004, 'Roshan Jayawardena', 'roshan.j@email.com', 'pbkdf2_sha256$210000$xYwUj8IuHoE42RopRFSzhA==$ac5TUBwdm9av3fzUZEvPLDcRVwxgxFT5DRqY3Q412ho=', 'Regular'
 WHERE NOT EXISTS (SELECT 1 FROM `customers` WHERE LOWER(`email`) = LOWER('roshan.j@email.com'));
 
 INSERT IGNORE INTO `customers` (`user_id`, `name`, `email`, `password`, `customer_type`)
-SELECT 1005, 'Nethmi De Silva', 'nethmi.dk@email.com', '$nethmi45', 'Premium'
+SELECT 1005, 'Nethmi De Silva', 'nethmi.dk@email.com', 'pbkdf2_sha256$210000$TN4uuAYVgXmu/h1a/gpGlg==$OdqmvPgq37zxcOT1FYWFjCvtURNMJcL/c/twmS+RWtA=', 'Premium'
 WHERE NOT EXISTS (SELECT 1 FROM `customers` WHERE LOWER(`email`) = LOWER('nethmi.dk@email.com'));
 
 INSERT IGNORE INTO `customers` (`user_id`, `name`, `email`, `password`, `customer_type`)
-SELECT 1006, 'Sudeera Shasanka', 'hpvictus753@gmail.com', '@Su12red3', 'Premium'
+SELECT 1006, 'Sudeera Shasanka', 'hpvictus753@gmail.com', 'pbkdf2_sha256$210000$ZnUv+VBrO9gDSdN6RrWEeg==$u6YNGmciNfpzJ7OoMzrAeEIjfIUDU8A5wwiYVI6kQ4w=', 'Premium'
 WHERE NOT EXISTS (SELECT 1 FROM `customers` WHERE LOWER(`email`) = LOWER('hpvictus753@gmail.com'));
 
 INSERT IGNORE INTO `customers` (`user_id`, `name`, `email`, `password`, `customer_type`)
-SELECT 1007, 'Sarah-Jane De Silva', 'sarah.jane+test@salonweb.com', 'TestAccount1!', 'Regular'
+SELECT 1007, 'Sarah-Jane De Silva', 'sarah.jane+test@salonweb.com', 'pbkdf2_sha256$210000$RkHyZsGyijXWCQVJQ+4/Tw==$8mnddnr6OMrU6RoUfVJG8rx5i7tFzxXbWY2b1EiqwZU=', 'Regular'
 WHERE NOT EXISTS (SELECT 1 FROM `customers` WHERE LOWER(`email`) = LOWER('sarah.jane+test@salonweb.com'));
 
 INSERT IGNORE INTO `customers` (`user_id`, `name`, `email`, `password`, `customer_type`)
-SELECT 1008, 'Sarah Jenkins', 'sarah.j@email.com', 'pass123', 'Regular'
+SELECT 1008, 'Sarah Jenkins', 'sarah.j@email.com', 'pbkdf2_sha256$210000$akj1YNcpEC1HCwEn11aS5Q==$Mgu9xQtmACHTm8j8vC3/9G6tzlQ/YeVGfqy0E0wLYWc=', 'Regular'
 WHERE NOT EXISTS (SELECT 1 FROM `customers` WHERE LOWER(`email`) = LOWER('sarah.j@email.com'));
 
 INSERT IGNORE INTO `customers` (`user_id`, `name`, `email`, `password`, `customer_type`)
-SELECT 1009, 'Isabella Silva', 'isabellsil12@email.com', 'bella1234', 'Regular'
+SELECT 1009, 'Isabella Silva', 'isabellsil12@email.com', 'pbkdf2_sha256$210000$WedplWgmEi1qiSGljz2sQA==$KzjF78qACylShdnUGI16GPhSAv7cmctcrkN7CQz7y5E=', 'Regular'
 WHERE NOT EXISTS (SELECT 1 FROM `customers` WHERE LOWER(`email`) = LOWER('isabellsil12@email.com'));
 
 INSERT IGNORE INTO `customers` (`user_id`, `name`, `email`, `password`, `customer_type`)
-SELECT 1010, 'Soma Kumary', 'somakumary@email.com', 'dutchythin', 'Regular'
+SELECT 1010, 'Soma Kumary', 'somakumary@email.com', 'pbkdf2_sha256$210000$aLxlUFAyX0kZze1fV9BDZA==$lYpoJOy+L1gaIYSCsTAqiRVNQ94PdbV+zVH92E5FIXY=', 'Regular'
 WHERE NOT EXISTS (SELECT 1 FROM `customers` WHERE LOWER(`email`) = LOWER('somakumary@email.com'));
 
 INSERT IGNORE INTO `customers` (`user_id`, `name`, `email`, `password`, `customer_type`)
-SELECT 1011, 'Ravindu Perera', 'ravi.the@email.com', '123456', 'Regular'
+SELECT 1011, 'Ravindu Perera', 'ravi.the@email.com', 'pbkdf2_sha256$210000$hBpZCm2uNErsocATbPgLqA==$crGnS5YwRPMkIHK2QmEnmNFQTXzzzO+UdWBIfVOIzvw=', 'Regular'
 WHERE NOT EXISTS (SELECT 1 FROM `customers` WHERE LOWER(`email`) = LOWER('ravi.the@email.com'));
 
 INSERT IGNORE INTO `customers` (`user_id`, `name`, `email`, `password`, `customer_type`)
-SELECT 1012, 'testing person', 'testing@email.com', 'testing123', 'Premium'
+SELECT 1012, 'testing person', 'testing@email.com', 'pbkdf2_sha256$210000$IsjZ5obLvNpAoPb6FEkm6Q==$2CS+QGhlBqjFD+slT/6bXSXUhA85A2JiM8AjgXpo3jk=', 'Premium'
 WHERE NOT EXISTS (SELECT 1 FROM `customers` WHERE LOWER(`email`) = LOWER('testing@email.com'));
 
 INSERT IGNORE INTO `customers` (`user_id`, `name`, `email`, `password`, `customer_type`)
-SELECT 1014, 'Emma Thompson', 'emma@test.com', 'c', 'Regular'
+SELECT 1014, 'Emma Thompson', 'emma@test.com', 'pbkdf2_sha256$210000$Gvt6qc/U6KSXLEyor/RzNg==$qMpE99/GXM9nYzTBRLbctg2yFCcbG6e4KewCh0lMNtE=', 'Regular'
 WHERE NOT EXISTS (SELECT 1 FROM `customers` WHERE LOWER(`email`) = LOWER('emma@test.com'));
 
 INSERT IGNORE INTO `customers` (`user_id`, `name`, `email`, `password`, `customer_type`)
-SELECT 1015, 'Mighara Akash', 'mighara@email.com', 'mighara1234', 'Regular'
+SELECT 1015, 'Mighara Akash', 'mighara@email.com', 'pbkdf2_sha256$210000$zT9EMGNTsmdGYA9DC2Zntg==$5puYuzwwd8NXhpHF1yeCF3hGj7yHqwmJRxx+NkGXiuE=', 'Regular'
 WHERE NOT EXISTS (SELECT 1 FROM `customers` WHERE LOWER(`email`) = LOWER('mighara@email.com'));
 
 -- Staff/employee demo data
 INSERT IGNORE INTO `employees` (`user_id`, `username`, `password`, `name`, `email`, `role`, `level`, `specialty`, `welcome_message`, `availability_status`)
-SELECT 9001, 'admin', 'lumiere2026', 'Salon Owner', 'admin@lumieresalon.lk', 'MANAGER', 'Owner', 'Management', 'Welcome to Lumiere.', 'Available'
+SELECT 9001, 'admin', 'pbkdf2_sha256$210000$nZjYarRaYRQNlerCO4cmkA==$hXTAKZy0H4jjZC4l9Y8uZUwsj3OuyxGV3f8mM7WHZSM=', 'Salon Owner', 'admin@lumieresalon.lk', 'MANAGER', 'Owner', 'Management', 'Welcome to Lumiere.', 'Available'
 WHERE NOT EXISTS (
     SELECT 1 FROM `employees`
     WHERE LOWER(`username`) = LOWER('admin') OR LOWER(`email`) = LOWER('admin@lumieresalon.lk')
@@ -72,31 +83,31 @@ WHERE NOT EXISTS (
 
 -- Stylists moved from stylists.txt
 INSERT IGNORE INTO `stylists` (`user_id`, `name`, `email`, `password`, `specialty`, `level`, `available`, `image_file_name`)
-SELECT 4001, 'Nalika', 'nalika@lumieresalon.lk', '#nalika@lume', 'Skin Rejuvenation', 'Lead', TRUE, 'Skin Rejuvenation.png'
+SELECT 4001, 'Nalika', 'nalika@lumieresalon.lk', 'pbkdf2_sha256$210000$34z06etORA6yNRVSH0L5nA==$PlLWeo4asPv0Ms6Q2pVEJyofBLxpsotViAr7gbM5Vwo=', 'Skin Rejuvenation', 'Lead', TRUE, 'Skin Rejuvenation.png'
 WHERE NOT EXISTS (SELECT 1 FROM `stylists` WHERE LOWER(`email`) = LOWER('nalika@lumieresalon.lk'));
 
 INSERT IGNORE INTO `stylists` (`user_id`, `name`, `email`, `password`, `specialty`, `level`, `available`, `image_file_name`)
-SELECT 4002, 'Kasun', 'kasun@lumieresalon.lk', '#kasun@lume', 'Color & Balayage', 'Senior', TRUE, 'Color & Balayage.png'
+SELECT 4002, 'Kasun', 'kasun@lumieresalon.lk', 'pbkdf2_sha256$210000$s0Zzh+F/OMIXX8LPetJykg==$0UyxAHqc/wiGgFg9Pu4yYbYMIZizAoPYgbsAXNykUDI=', 'Color & Balayage', 'Senior', TRUE, 'Color & Balayage.png'
 WHERE NOT EXISTS (SELECT 1 FROM `stylists` WHERE LOWER(`email`) = LOWER('kasun@lumieresalon.lk'));
 
 INSERT IGNORE INTO `stylists` (`user_id`, `name`, `email`, `password`, `specialty`, `level`, `available`, `image_file_name`)
-SELECT 4003, 'Kamindu', 'kamindu@lumieresalon.lk', '#kamindu@lume', 'Men''s Grooming', 'Master', TRUE, 'Men''s Grooming.png'
+SELECT 4003, 'Kamindu', 'kamindu@lumieresalon.lk', 'pbkdf2_sha256$210000$wDwenLPwCdyh7dW6EXbZ6Q==$SHx8iTJrIeuG/BYrNjJ7N2m40EZn1MEoOiyNkVd6n+Q=', 'Men''s Grooming', 'Master', TRUE, 'Men''s Grooming.png'
 WHERE NOT EXISTS (SELECT 1 FROM `stylists` WHERE LOWER(`email`) = LOWER('kamindu@lumieresalon.lk'));
 
 INSERT IGNORE INTO `stylists` (`user_id`, `name`, `email`, `password`, `specialty`, `level`, `available`, `image_file_name`)
-SELECT 4004, 'Shenali', 'shenali@lumieresalon.lk', '#shenali@lume', 'Hair Treatments', 'Senior', TRUE, 'Hair Treatments.png'
+SELECT 4004, 'Shenali', 'shenali@lumieresalon.lk', 'pbkdf2_sha256$210000$acR6H4COiOZddfQm1+0MIw==$lULFONArPVB3W7e8OrHkrB2Ek8/h47bHSzuTc1tL5So=', 'Hair Treatments', 'Senior', TRUE, 'Hair Treatments.png'
 WHERE NOT EXISTS (SELECT 1 FROM `stylists` WHERE LOWER(`email`) = LOWER('shenali@lumieresalon.lk'));
 
 INSERT IGNORE INTO `stylists` (`user_id`, `name`, `email`, `password`, `specialty`, `level`, `available`, `image_file_name`)
-SELECT 4005, 'Dinithi', 'dinithi@lumieresalon.lk', '#dinithi@lume', 'Nail Artistry', 'Junior', TRUE, 'Nail Artistry.png'
+SELECT 4005, 'Dinithi', 'dinithi@lumieresalon.lk', 'pbkdf2_sha256$210000$G1Lgm3Whg/Zt2Rxj5j11zA==$s4AO3A/yDWw6OqFBmU8gg70LPlzMOYOaRKOFAI5/3ws=', 'Nail Artistry', 'Junior', TRUE, 'Nail Artistry.png'
 WHERE NOT EXISTS (SELECT 1 FROM `stylists` WHERE LOWER(`email`) = LOWER('dinithi@lumieresalon.lk'));
 
 INSERT IGNORE INTO `stylists` (`user_id`, `name`, `email`, `password`, `specialty`, `level`, `available`, `image_file_name`)
-SELECT 4006, 'Ruwan', 'ruwan@lumieresalon.lk', '#ruwan@lume', 'Massage Therapy', 'Senior', TRUE, 'Massage Therapy.png'
+SELECT 4006, 'Ruwan', 'ruwan@lumieresalon.lk', 'pbkdf2_sha256$210000$YE0SVDUyqBQzqLZYKJChTw==$uenKGgr1xB8h2rQ7K08wOzNj9JC3/UkWGxNixIQ8eFg=', 'Massage Therapy', 'Senior', TRUE, 'Massage Therapy.png'
 WHERE NOT EXISTS (SELECT 1 FROM `stylists` WHERE LOWER(`email`) = LOWER('ruwan@lumieresalon.lk'));
 
 INSERT IGNORE INTO `stylists` (`user_id`, `name`, `email`, `password`, `specialty`, `level`, `available`, `image_file_name`)
-SELECT 4007, 'Zara', 'zara@lumieresalon.lk', '#zara@lume', 'Hair Extensions & Volume', 'Lead', TRUE, 'default.jpg'
+SELECT 4007, 'Zara', 'zara@lumieresalon.lk', 'pbkdf2_sha256$210000$hx45U9PM3f/jsQG1U1hQvg==$27WVDy5QlVnc8KLVQMeEG2giJT8TkMPA8o/G+BR2rLs=', 'Hair Extensions & Volume', 'Lead', TRUE, 'default.jpg'
 WHERE NOT EXISTS (SELECT 1 FROM `stylists` WHERE LOWER(`email`) = LOWER('zara@lumieresalon.lk'));
 
 -- Services moved from data/services.txt

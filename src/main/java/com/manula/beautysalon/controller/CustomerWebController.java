@@ -166,7 +166,7 @@ public class CustomerWebController {
 
             case "login":
                 if (email != null && password != null) {
-                    Customer authenticated = customerService.findByEmailAndPassword(email, password);
+                    Customer authenticated = customerService.authenticateCustomer(email, password);
                     if (authenticated != null) {
                         session.setAttribute("loggedInCustomerEmail", authenticated.getEmail());
                         session.setAttribute("loggedInCustomerName", authenticated.getName());

@@ -15,7 +15,5 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
 
     boolean existsByEmailIgnoreCaseAndUserIdNot(String email, int userId);
 
-    Optional<Customer> findByEmailIgnoreCaseAndPassword(String email, String password);
-
     Optional<Customer> findTopByOrderByUserIdDesc();
 }

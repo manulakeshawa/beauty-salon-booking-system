@@ -13,11 +13,13 @@ public class StaffService {
     private final EmployeeRepository employeeRepository;
     private final StylistService stylistService;
     private final AccountEmailService accountEmailService;
+    private final PasswordService passwordService;
 
-    public StaffService(EmployeeRepository employeeRepository, StylistService stylistService, AccountEmailService accountEmailService) {
+    public StaffService(EmployeeRepository employeeRepository, StylistService stylistService, AccountEmailService accountEmailService, PasswordService passwordService) {
         this.employeeRepository = employeeRepository;
         this.stylistService = stylistService;
         this.accountEmailService = accountEmailService;
+        this.passwordService = passwordService;
     }
 
     public Employee authenticateEmployee(String username, String password) {
@@ -27,14 +29,14 @@ public class StaffService {
 
         String trimmedUsername = username.trim();
         Employee employee = employeeRepository
-                .findByUsernameIgnoreCaseAndPassword(trimmedUsername, password)
+                .findByUsernameIgnoreCase(trimmedUsername)
                 .orElse(null);
 
         if (employee != null) {
-            return employee;
+            return passwordService.matches(password, employee.getPassword()) ? employee : null;
         }
 
-        if ("admin".equalsIgnoreCase(trimmedUsername) && "lumiere2026".equals(password)) {
+        if ("admin".equalsIgnoreCase(trimmedUsername) && passwordService.matches(password, defaultManagerPasswordHash())) {
             return defaultManager();
         }
 
@@ -49,6 +51,7 @@ public class StaffService {
     public Employee saveEmployee(Employee employee) {
         employee.setUserId(0);
         employee.setEmail(accountEmailService.normalize(employee.getEmail()));
+        employee.setPassword(passwordService.hashIfPlainText(employee.getPassword()));
         accountEmailService.assertEmployeeEmailAvailable(employee.getEmail(), employee.getUserId());
         try {
             return employeeRepository.save(employee);
@@ -63,7 +66,7 @@ public class StaffService {
             String normalizedEmail = accountEmailService.normalize(updatedEmployee.getEmail());
             accountEmailService.assertEmployeeEmailAvailable(normalizedEmail, updatedEmployee.getUserId());
             existing.setUsername(updatedEmployee.getUsername());
-            existing.setPassword(updatedEmployee.getPassword());
+            existing.setPassword(passwordService.hashIfPlainText(updatedEmployee.getPassword()));
             existing.setFullName(updatedEmployee.getFullName());
             existing.setEmail(normalizedEmail);
             existing.setRole(updatedEmployee.getRole());
@@ -83,7 +86,7 @@ public class StaffService {
         return new Employee(
                 0,
                 "admin",
-                "lumiere2026",
+                defaultManagerPasswordHash(),
                 "Salon Owner",
                 "admin@lumieresalon.lk",
                 "MANAGER",
@@ -92,5 +95,9 @@ public class StaffService {
                 "Welcome to Lumiere.",
                 "Available"
         );
+    }
+
+    private String defaultManagerPasswordHash() {
+        return "pbkdf2_sha256$210000$nZjYarRaYRQNlerCO4cmkA==$hXTAKZy0H4jjZC4l9Y8uZUwsj3OuyxGV3f8mM7WHZSM=";
     }
 }

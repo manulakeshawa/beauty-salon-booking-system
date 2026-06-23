@@ -19,19 +19,22 @@ public class StylistService {
     private final ReviewRepository reviewRepository;
     private final SalonServiceRepository salonServiceRepository;
     private final AccountEmailService accountEmailService;
+    private final PasswordService passwordService;
 
-    public StylistService(StylistRepository stylistRepository, AppointmentRepository appointmentRepository, ReviewRepository reviewRepository, SalonServiceRepository salonServiceRepository, AccountEmailService accountEmailService) {
+    public StylistService(StylistRepository stylistRepository, AppointmentRepository appointmentRepository, ReviewRepository reviewRepository, SalonServiceRepository salonServiceRepository, AccountEmailService accountEmailService, PasswordService passwordService) {
         this.stylistRepository = stylistRepository;
         this.appointmentRepository = appointmentRepository;
         this.reviewRepository = reviewRepository;
         this.salonServiceRepository = salonServiceRepository;
         this.accountEmailService = accountEmailService;
+        this.passwordService = passwordService;
     }
 
     @Transactional
     public Stylist saveStylist(Stylist stylist) {
         stylist.setUserId(0);
         stylist.setEmail(accountEmailService.normalize(stylist.getEmail()));
+        stylist.setPassword(passwordService.hashIfPlainText(stylist.getPassword()));
         stylist.setActive(true);
         accountEmailService.assertStylistEmailAvailable(stylist.getEmail(), stylist.getUserId());
         try {
@@ -69,7 +72,7 @@ public class StylistService {
                     || stylist.getEmail().equalsIgnoreCase(trimmedIdentifier)
                     || idString.equals(trimmedIdentifier);
 
-            if (identifierMatches && stylist.isActive() && stylist.getPassword().equals(password)) {
+            if (identifierMatches && stylist.isActive() && passwordService.matches(password, stylist.getPassword())) {
                 return stylist;
             }
         }
@@ -84,7 +87,7 @@ public class StylistService {
             accountEmailService.assertStylistEmailAvailable(normalizedEmail, updatedStylist.getUserId());
             existing.setName(updatedStylist.getName());
             existing.setEmail(normalizedEmail);
-            existing.setPassword(updatedStylist.getPassword());
+            existing.setPassword(passwordService.hashIfPlainText(updatedStylist.getPassword()));
             existing.setSpecialty(updatedStylist.getSpecialty());
             existing.setLevel(updatedStylist.getLevel());
             existing.setAvailable(updatedStylist.isAvailable());

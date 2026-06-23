@@ -15,5 +15,5 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
 
     boolean existsByEmailIgnoreCaseAndUserIdNot(String email, int userId);
 
-    Optional<Employee> findByUsernameIgnoreCaseAndPassword(String username, String password);
+    Optional<Employee> findByUsernameIgnoreCase(String username);
 }

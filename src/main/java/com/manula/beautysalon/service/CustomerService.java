@@ -17,18 +17,21 @@ public class CustomerService {
     private final AppointmentRepository appointmentRepository;
     private final ReviewRepository reviewRepository;
     private final AccountEmailService accountEmailService;
+    private final PasswordService passwordService;
 
-    public CustomerService(CustomerRepository customerRepository, AppointmentRepository appointmentRepository, ReviewRepository reviewRepository, AccountEmailService accountEmailService) {
+    public CustomerService(CustomerRepository customerRepository, AppointmentRepository appointmentRepository, ReviewRepository reviewRepository, AccountEmailService accountEmailService, PasswordService passwordService) {
         this.customerRepository = customerRepository;
         this.appointmentRepository = appointmentRepository;
         this.reviewRepository = reviewRepository;
         this.accountEmailService = accountEmailService;
+        this.passwordService = passwordService;
     }
 
     @Transactional
     public Customer saveCustomer(Customer customer) {
         customer.setUserId(0);
         customer.setEmail(accountEmailService.normalize(customer.getEmail()));
+        customer.setPassword(passwordService.hashIfPlainText(customer.getPassword()));
         accountEmailService.assertCustomerEmailAvailable(customer.getEmail(), customer.getUserId());
         try {
             return customerRepository.save(customer);
@@ -49,7 +52,7 @@ public class CustomerService {
             accountEmailService.assertCustomerEmailAvailable(normalizedEmail, updatedCustomer.getUserId());
             existing.setName(updatedCustomer.getName());
             existing.setEmail(normalizedEmail);
-            existing.setPassword(updatedCustomer.getPassword());
+            existing.setPassword(passwordService.hashIfPlainText(updatedCustomer.getPassword()));
             existing.setCustomerType(updatedCustomer.getCustomerType());
             try {
                 customerRepository.save(existing);
@@ -87,11 +90,15 @@ public class CustomerService {
         return customerRepository.findByEmailIgnoreCase(accountEmailService.normalize(email)).orElse(null);
     }
 
-    public Customer findByEmailAndPassword(String email, String password) {
+    public Customer authenticateCustomer(String email, String password) {
         if (email == null || password == null) {
             return null;
         }
-        return customerRepository.findByEmailIgnoreCaseAndPassword(accountEmailService.normalize(email), password).orElse(null);
+        Customer customer = findByEmail(email);
+        if (customer == null || !passwordService.matches(password, customer.getPassword())) {
+            return null;
+        }
+        return customer;
     }
 
     public int generateNextCustomerId() {
