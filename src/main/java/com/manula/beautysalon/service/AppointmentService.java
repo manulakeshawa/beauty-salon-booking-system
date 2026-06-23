@@ -3,6 +3,7 @@ package com.manula.beautysalon.service;
 import com.manula.beautysalon.model.Appointment;
 import com.manula.beautysalon.repository.AppointmentRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -24,6 +25,7 @@ public class AppointmentService {
         return appointmentRepository.findAllByOrderByAppointmentIdAsc();
     }
 
+    @Transactional
     public void updateAppointment(Appointment updatedAppointment) {
         appointmentRepository.findById(updatedAppointment.getAppointmentId()).ifPresent(existing -> {
             existing.setCustomerName(updatedAppointment.getCustomerName());
@@ -36,6 +38,7 @@ public class AppointmentService {
         });
     }
 
+    @Transactional
     public void deleteAppointment(int appointmentId) {
         if (appointmentRepository.existsById(appointmentId)) {
             appointmentRepository.deleteById(appointmentId);

@@ -45,7 +45,7 @@ public class HomeController {
 
     private List<SalonService> loadServices() {
         try {
-            return salonServiceService.readAllServices();
+            return salonServiceService.readActiveServices();
         } catch (Exception e) {
             return new ArrayList<>();
         }
@@ -64,7 +64,7 @@ public class HomeController {
 
     private List<Stylist> loadStylists() {
         try {
-            return stylistService.readAllStylists();
+            return stylistService.readActiveStylists();
         } catch (Exception e) {
             return new ArrayList<>();
         }

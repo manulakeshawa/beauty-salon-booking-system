@@ -50,8 +50,8 @@ public class AppointmentWebController {
                     return "redirect:/admin?error=unauthorized";
                 }
                 model.addAttribute("generatedAppointmentId", appointmentService.generateNextAppointmentId());
-                model.addAttribute("services", salonServiceService.readAllServices());
-                model.addAttribute("stylists", stylistService.readAllStylists());
+                model.addAttribute("services", salonServiceService.readActiveServices());
+                model.addAttribute("stylists", stylistService.readActiveAvailableStylists());
                 if ("double_booked".equals(error)) {
                     model.addAttribute("errorMessage", "Double Booking Prevented: That stylist is already booked at that exact time!");
                 }
@@ -64,8 +64,8 @@ public class AppointmentWebController {
                 }
                 model.addAttribute("customerName", loggedInName);
                 model.addAttribute("generatedAppointmentId", appointmentService.generateNextAppointmentId());
-                model.addAttribute("services", salonServiceService.readAllServices());
-                model.addAttribute("stylists", stylistService.readAllStylists());
+                model.addAttribute("services", salonServiceService.readActiveServices());
+                model.addAttribute("stylists", stylistService.readActiveAvailableStylists());
                 if ("double_booked".equals(error)) {
                     model.addAttribute("errorMessage", "This time slot was just taken! Please select a different time or stylist.");
                 }
@@ -119,13 +119,10 @@ public class AppointmentWebController {
             return "redirect:/my-portal";
         }
 
-        List<SalonService> allServices = salonServiceService.readAllServices();
         double basePrice = 0.0;
-        for (SalonService service : allServices) {
-            if (service.getName().equalsIgnoreCase(appt.getServiceName())) {
-                basePrice = service.getBasePrice();
-                break;
-            }
+        SalonService bookedService = salonServiceService.findByNameIncludingInactive(appt.getServiceName());
+        if (bookedService != null) {
+            basePrice = bookedService.getBasePrice();
         }
 
         List<Appointment> allAppts = appointmentService.readAllAppointments();

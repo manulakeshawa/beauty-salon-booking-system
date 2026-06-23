@@ -3,6 +3,7 @@ package com.manula.beautysalon.service;
 import com.manula.beautysalon.model.Review;
 import com.manula.beautysalon.repository.ReviewRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +22,7 @@ public class ReviewService {
         return reviewRepository.save(review);
     }
 
+    @Transactional
     public void updateReview(int reviewId, int newRating, String newComment) {
         reviewRepository.findById(reviewId).ifPresent(review -> {
             review.setRating(newRating);
@@ -29,6 +31,7 @@ public class ReviewService {
         });
     }
 
+    @Transactional
     public void deleteReview(int reviewId) {
         if (reviewRepository.existsById(reviewId)) {
             reviewRepository.deleteById(reviewId);
@@ -87,6 +90,7 @@ public class ReviewService {
         return filteredReviews;
     }
 
+    @Transactional
     public void toggleReviewVerification(int reviewId) {
         reviewRepository.findById(reviewId).ifPresent(review -> {
             review.setVerified(!review.isVerified());

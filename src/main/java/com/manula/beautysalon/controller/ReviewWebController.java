@@ -33,7 +33,7 @@ public class ReviewWebController {
         }
 
         model.addAttribute("customerName", loggedInName);
-        model.addAttribute("services", salonServiceService.readAllServices());
+        model.addAttribute("services", salonServiceService.readActiveServices());
         return "public-review-form";
     }
 

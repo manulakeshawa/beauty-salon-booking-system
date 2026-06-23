@@ -2,6 +2,7 @@ package com.manula.beautysalon.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
 @Entity
@@ -12,6 +13,7 @@ public class Stylist extends StaffMember {
     private String level;
     private boolean available;
     private String imageFileName;
+    private Boolean active = true;
 
     public Stylist() {
         super();
@@ -23,12 +25,17 @@ public class Stylist extends StaffMember {
         this.level = level;
         this.available = available;
         this.imageFileName = imageFileName;
+        this.active = true;
     }
 
     @PrePersist
+    @PreUpdate
     private void applyDefaults() {
         if (imageFileName == null || imageFileName.isBlank()) {
             imageFileName = "default-stylist.png";
+        }
+        if (active == null) {
+            active = true;
         }
     }
 
@@ -66,6 +73,18 @@ public class Stylist extends StaffMember {
         this.imageFileName = imageFileName;
     }
 
+    public boolean isActive() {
+        return active == null || active;
+    }
+
+    public Boolean getActive() {
+        return active;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
+
     @Override
     public String getWelcomeMessage() {
         switch (level != null ? level.toLowerCase() : "") {
@@ -89,6 +108,9 @@ public class Stylist extends StaffMember {
     }
 
     public String getAvailabilityStatus() {
+        if (!isActive()) {
+            return "Inactive";
+        }
         return available ? "Available" : "Unavailable";
     }
 

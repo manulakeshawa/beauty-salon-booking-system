@@ -43,7 +43,7 @@ public class ServiceWebController {
                     return "redirect:/admin?error=unauthorized";
                 }
                 model.addAttribute("generatedServiceId", salonServiceService.generateNextServiceId());
-                model.addAttribute("stylists", stylistService.readAllStylists());
+                model.addAttribute("stylists", stylistService.readActiveAvailableStylists());
                 return "AddService";
             case "edit":
                 if (!SecurityUtils.isManager(session)) {
@@ -58,7 +58,7 @@ public class ServiceWebController {
                 }
                 model.addAttribute("service", service);
                 model.addAttribute("typeValue", service instanceof PackageService ? "package" : "standard");
-                model.addAttribute("stylists", stylistService.readAllStylists());
+                model.addAttribute("stylists", stylistService.readActiveAvailableStylists());
                 return "EditService";
             case "delete":
                 if (!SecurityUtils.isManager(session)) {

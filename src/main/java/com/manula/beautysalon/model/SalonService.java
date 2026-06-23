@@ -10,6 +10,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Lob;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
 @Entity
@@ -32,6 +34,7 @@ public abstract class SalonService {
     private double basePrice;
     private String imageFileName;
     private String stylistName;
+    private Boolean active = true;
 
     protected SalonService() {
     }
@@ -43,6 +46,15 @@ public abstract class SalonService {
         this.basePrice = basePrice;
         this.imageFileName = imageFileName;
         this.stylistName = stylistName;
+        this.active = true;
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void applyDefaults() {
+        if (active == null) {
+            active = true;
+        }
     }
 
     public int getServiceId() {
@@ -91,6 +103,18 @@ public abstract class SalonService {
 
     public void setStylistName(String stylistName) {
         this.stylistName = stylistName;
+    }
+
+    public boolean isActive() {
+        return active == null || active;
+    }
+
+    public Boolean getActive() {
+        return active;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
     }
 
     public String getServiceType() {
