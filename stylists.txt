@@ -1,7 +1,0 @@
-4001,Nalika,nalika@lumieresalon.lk,#nalika@lume,Skin Rejuvenation,Lead,true,Skin Rejuvenation.png
-4002,Kasun,kasun@lumieresalon.lk,#kasun@lume,Color & Balayage,Senior,true,Color & Balayage.png
-4003,Kamindu,kamindu@lumieresalon.lk,#kamindu@lume,Men's Grooming,Master,true,Men's Grooming.png
-4004,Shenali,shenali@lumieresalon.lk,#shenali@lume,Hair Treatments,Senior,true,Hair Treatments.png
-4005,Dinithi,dinithi@lumieresalon.lk,#dinithi@lume,Nail Artistry,Junior,true,Nail Artistry.png
-4006,Ruwan,ruwan@lumieresalon.lk,#ruwan@lume,Massage Therapy,Senior,true,Massage Therapy.png
-4007,Zara,zara@lumieresalon.lk,#zara@lume,Hair Extensions & Volume,Lead,true,default.jpg

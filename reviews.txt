@@ -1,9 +1,0 @@
-v2 | 5001 | Amaya Fernando | Lumière Signature Facial | Nalika | 4 | Absolutely incredible experience. My skin has never felt better! | Public | true
-v2 | 5002 | Dineth Perera | Classic Gentlemen's Grooming | Kamindu | 5 | Kamindu is a true professional. The hot towel shave was top notch. | Public | true
-v2 | 5003 | Kavindi Silva | Bridal Hair & Makeup Package | Kasun | 5 | Kasun made me look flawless for my big day. Highly recommend this salon! | Public | true
-v2 | 5004 | Roshan Jayawardena | Bespoke Hair Styling | Kasun | 4 | Great sharp cut. The salon has a wonderful and relaxing atmosphere. | Public | false
-v2 | 5005 | Nethmi De Silva | Luxury Gel Manicure | Dinithi | 5 | Dinithi is a perfectionist. The gel polish looks flawless and vibrant. | Public | false
-v2 | 5006 | Sudeera Shasanka | Keratin Smoothing Treatment | Shenali | 5 | Very professional service. My hair is incredibly smooth, shiny, and easy to manage now. | Verified | true
-v2 | 5007 | Sarah-Jane De Silva | Bridal Hair & Makeup Package | Shenali | 5 | Stunning results and professional service. I couldn't have asked for a better bridal glow-up! | Verified | true
-v2 | 5008 | Ravindu Perera | Luxury Gel Manicure | Dinithi | 5 | The Best Luxury Gel Manicure I've Ever Had! | 8a7c8a82-9c18-48ca-a631-d846dfe741e2 | true
-v2 | 5009 | Mighara Akash | Classic Gentlemen's Grooming | Kamindu | 4 | I recommend to anyone. I'm so happy.. | f0c9a6f0-1862-4c0a-98a4-50e5f08d543c | true

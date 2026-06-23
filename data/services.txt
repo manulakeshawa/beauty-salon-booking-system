@@ -1,7 +1,0 @@
-2001,Standard,Lumière Signature Facial,Deep cleansing and rejuvenating spa facial for radiant skin.,8500.0,facial.png,Nalika
-2002,Standard,Bespoke Hair Styling,Premium haircut and styling consultation by a master stylist.,5000.0,haircut.png,Shenali
-2003,Standard,Luxury Gel Manicure,Complete hand care with cuticle treatment and premium gel polish.,4500.0,manicure.png,Dinithi
-2004,Package,Keratin Smoothing Treatment,Long-lasting frizz control and luxury hair smoothing.,15000.0,keratin.png,Shenali
-2005,Package,Bridal Hair & Makeup Package,Full bridal preparation including initial consultation.,35000.0,bridal.png,Kasun
-2006,Standard,Classic Gentlemen's Grooming,Traditional hot towel shave and precision haircut.,3500.0,grooming.png,Kamindu
-2007,Package,Signature Volumizing Hair Extensions,A complete transformation adding luxurious length and natural-looking volume using premium  ethically sourced extensions. Includes custom color matching  seamless blending  and a signature styling finish.,45000.0,hairextention.png,Zara
