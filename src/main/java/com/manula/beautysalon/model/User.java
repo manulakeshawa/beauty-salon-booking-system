@@ -1,10 +1,13 @@
 package com.manula.beautysalon.model;
 
+import com.manula.beautysalon.util.EmailUtils;
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 
 @MappedSuperclass
 public abstract class User {
@@ -29,7 +32,7 @@ public abstract class User {
     protected User(int userId, String name, String email, String password) {
         this.userId = userId;
         this.name = name;
-        this.email = email;
+        this.email = EmailUtils.normalize(email);
         this.password = password;
     }
 
@@ -54,7 +57,7 @@ public abstract class User {
     }
 
     public void setEmail(String email) {
-        this.email = email;
+        this.email = EmailUtils.normalize(email);
     }
 
     public String getPassword() {
@@ -66,4 +69,10 @@ public abstract class User {
     }
 
     public abstract String getWelcomeMessage();
+
+    @PrePersist
+    @PreUpdate
+    private void normalizeEmail() {
+        email = EmailUtils.normalize(email);
+    }
 }

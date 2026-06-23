@@ -1,6 +1,7 @@
 package com.manula.beautysalon.controller;
 
 import com.manula.beautysalon.model.Stylist;
+import com.manula.beautysalon.service.DuplicateEmailException;
 import com.manula.beautysalon.service.StylistService;
 import com.manula.beautysalon.util.SecurityUtils;
 import jakarta.servlet.http.HttpSession;
@@ -9,6 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -88,7 +90,8 @@ public class StylistWebController {
             @RequestParam(required = false) String specialty,
             @RequestParam(required = false) String level,
             @RequestParam(required = false) Boolean available,
-            HttpSession session
+            HttpSession session,
+            RedirectAttributes redirectAttributes
     ) {
         if (session.getAttribute("staffRole") == null) {
             return "redirect:/staff-login";
@@ -107,7 +110,12 @@ public class StylistWebController {
                     Stylist stylist = stylistService.findByEmail(loggedInEmail);
                     if (stylist != null) {
                         stylist.setPassword(newPassword);
-                        stylistService.updateStylist(stylist);
+                        try {
+                            stylistService.updateStylist(stylist);
+                        } catch (DuplicateEmailException ex) {
+                            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+                            return "redirect:/stylist-portal?passwordStatus=emailConflict";
+                        }
                     }
                 }
                 return "redirect:/stylist-portal?passwordStatus=updated";
@@ -128,7 +136,12 @@ public class StylistWebController {
                             available != null && available,
                             "default.jpg"
                     );
-                    stylistService.saveStylist(stylist);
+                    try {
+                        stylistService.saveStylist(stylist);
+                    } catch (DuplicateEmailException ex) {
+                        redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+                        return "redirect:/stylists?action=register";
+                    }
                 }
                 break;
             case "edit":
@@ -155,7 +168,12 @@ public class StylistWebController {
                             existing.setLevel(level);
                         }
                         existing.setAvailable(available != null && available);
-                        stylistService.updateStylist(existing);
+                        try {
+                            stylistService.updateStylist(existing);
+                        } catch (DuplicateEmailException ex) {
+                            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+                            return "redirect:/stylists?action=update&userId=" + userId;
+                        }
                     }
                 }
                 break;
@@ -167,7 +185,12 @@ public class StylistWebController {
                     Stylist stylist = stylistService.findById(userId);
                     if (stylist != null) {
                         stylist.setAvailable(available != null && available);
-                        stylistService.updateStylist(stylist);
+                        try {
+                            stylistService.updateStylist(stylist);
+                        } catch (DuplicateEmailException ex) {
+                            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+                            return "redirect:/stylists?action=availability";
+                        }
                     }
                 }
                 return "redirect:/stylists?action=availability";

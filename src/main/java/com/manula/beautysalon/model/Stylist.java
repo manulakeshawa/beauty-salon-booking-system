@@ -4,9 +4,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 @Entity
-@Table(name = "stylists")
+@Table(name = "stylists", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_stylists_email", columnNames = "email")
+})
 public class Stylist extends StaffMember {
 
     private String specialty;

@@ -4,6 +4,7 @@ import com.manula.beautysalon.model.Customer;
 import com.manula.beautysalon.repository.AppointmentRepository;
 import com.manula.beautysalon.repository.CustomerRepository;
 import com.manula.beautysalon.repository.ReviewRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,16 +16,25 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final AppointmentRepository appointmentRepository;
     private final ReviewRepository reviewRepository;
+    private final AccountEmailService accountEmailService;
 
-    public CustomerService(CustomerRepository customerRepository, AppointmentRepository appointmentRepository, ReviewRepository reviewRepository) {
+    public CustomerService(CustomerRepository customerRepository, AppointmentRepository appointmentRepository, ReviewRepository reviewRepository, AccountEmailService accountEmailService) {
         this.customerRepository = customerRepository;
         this.appointmentRepository = appointmentRepository;
         this.reviewRepository = reviewRepository;
+        this.accountEmailService = accountEmailService;
     }
 
+    @Transactional
     public Customer saveCustomer(Customer customer) {
         customer.setUserId(0);
-        return customerRepository.save(customer);
+        customer.setEmail(accountEmailService.normalize(customer.getEmail()));
+        accountEmailService.assertCustomerEmailAvailable(customer.getEmail(), customer.getUserId());
+        try {
+            return customerRepository.save(customer);
+        } catch (DataIntegrityViolationException ex) {
+            throw new DuplicateEmailException(AccountEmailService.DUPLICATE_EMAIL_MESSAGE, ex);
+        }
     }
 
     public List<Customer> readAllCustomers() {
@@ -35,11 +45,17 @@ public class CustomerService {
     public void updateCustomer(Customer updatedCustomer) {
         customerRepository.findById(updatedCustomer.getUserId()).ifPresent(existing -> {
             String previousName = existing.getName();
+            String normalizedEmail = accountEmailService.normalize(updatedCustomer.getEmail());
+            accountEmailService.assertCustomerEmailAvailable(normalizedEmail, updatedCustomer.getUserId());
             existing.setName(updatedCustomer.getName());
-            existing.setEmail(updatedCustomer.getEmail());
+            existing.setEmail(normalizedEmail);
             existing.setPassword(updatedCustomer.getPassword());
             existing.setCustomerType(updatedCustomer.getCustomerType());
-            customerRepository.save(existing);
+            try {
+                customerRepository.save(existing);
+            } catch (DataIntegrityViolationException ex) {
+                throw new DuplicateEmailException(AccountEmailService.DUPLICATE_EMAIL_MESSAGE, ex);
+            }
 
             if (hasText(previousName) && hasText(updatedCustomer.getName())
                     && !previousName.equalsIgnoreCase(updatedCustomer.getName())) {
@@ -68,14 +84,14 @@ public class CustomerService {
         if (email == null) {
             return null;
         }
-        return customerRepository.findByEmailIgnoreCase(email).orElse(null);
+        return customerRepository.findByEmailIgnoreCase(accountEmailService.normalize(email)).orElse(null);
     }
 
     public Customer findByEmailAndPassword(String email, String password) {
         if (email == null || password == null) {
             return null;
         }
-        return customerRepository.findByEmailIgnoreCaseAndPassword(email, password).orElse(null);
+        return customerRepository.findByEmailIgnoreCaseAndPassword(accountEmailService.normalize(email), password).orElse(null);
     }
 
     public int generateNextCustomerId() {

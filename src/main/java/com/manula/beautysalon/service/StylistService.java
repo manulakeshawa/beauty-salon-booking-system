@@ -5,6 +5,7 @@ import com.manula.beautysalon.repository.AppointmentRepository;
 import com.manula.beautysalon.repository.ReviewRepository;
 import com.manula.beautysalon.repository.SalonServiceRepository;
 import com.manula.beautysalon.repository.StylistRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,18 +18,27 @@ public class StylistService {
     private final AppointmentRepository appointmentRepository;
     private final ReviewRepository reviewRepository;
     private final SalonServiceRepository salonServiceRepository;
+    private final AccountEmailService accountEmailService;
 
-    public StylistService(StylistRepository stylistRepository, AppointmentRepository appointmentRepository, ReviewRepository reviewRepository, SalonServiceRepository salonServiceRepository) {
+    public StylistService(StylistRepository stylistRepository, AppointmentRepository appointmentRepository, ReviewRepository reviewRepository, SalonServiceRepository salonServiceRepository, AccountEmailService accountEmailService) {
         this.stylistRepository = stylistRepository;
         this.appointmentRepository = appointmentRepository;
         this.reviewRepository = reviewRepository;
         this.salonServiceRepository = salonServiceRepository;
+        this.accountEmailService = accountEmailService;
     }
 
+    @Transactional
     public Stylist saveStylist(Stylist stylist) {
         stylist.setUserId(0);
+        stylist.setEmail(accountEmailService.normalize(stylist.getEmail()));
         stylist.setActive(true);
-        return stylistRepository.save(stylist);
+        accountEmailService.assertStylistEmailAvailable(stylist.getEmail(), stylist.getUserId());
+        try {
+            return stylistRepository.save(stylist);
+        } catch (DataIntegrityViolationException ex) {
+            throw new DuplicateEmailException(AccountEmailService.DUPLICATE_EMAIL_MESSAGE, ex);
+        }
     }
 
     public List<Stylist> readAllStylists() {
@@ -70,14 +80,20 @@ public class StylistService {
     public void updateStylist(Stylist updatedStylist) {
         stylistRepository.findById(updatedStylist.getUserId()).ifPresent(existing -> {
             String previousName = existing.getName();
+            String normalizedEmail = accountEmailService.normalize(updatedStylist.getEmail());
+            accountEmailService.assertStylistEmailAvailable(normalizedEmail, updatedStylist.getUserId());
             existing.setName(updatedStylist.getName());
-            existing.setEmail(updatedStylist.getEmail());
+            existing.setEmail(normalizedEmail);
             existing.setPassword(updatedStylist.getPassword());
             existing.setSpecialty(updatedStylist.getSpecialty());
             existing.setLevel(updatedStylist.getLevel());
             existing.setAvailable(updatedStylist.isAvailable());
             existing.setImageFileName(updatedStylist.getImageFileName());
-            stylistRepository.save(existing);
+            try {
+                stylistRepository.save(existing);
+            } catch (DataIntegrityViolationException ex) {
+                throw new DuplicateEmailException(AccountEmailService.DUPLICATE_EMAIL_MESSAGE, ex);
+            }
 
             if (hasText(previousName) && hasText(updatedStylist.getName())
                     && !previousName.equalsIgnoreCase(updatedStylist.getName())) {
@@ -114,7 +130,7 @@ public class StylistService {
         if (email == null) {
             return null;
         }
-        return stylistRepository.findByEmailIgnoreCase(email).orElse(null);
+        return stylistRepository.findByEmailIgnoreCase(accountEmailService.normalize(email)).orElse(null);
     }
 
     public int generateNextStylistId() {

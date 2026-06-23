@@ -5,6 +5,7 @@ import com.manula.beautysalon.model.Customer;
 import com.manula.beautysalon.model.Review;
 import com.manula.beautysalon.service.AppointmentService;
 import com.manula.beautysalon.service.CustomerService;
+import com.manula.beautysalon.service.DuplicateEmailException;
 import com.manula.beautysalon.service.ReviewService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
@@ -12,6 +13,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -98,7 +100,8 @@ public class CustomerWebController {
             @RequestParam(required = false) String password,
             @RequestParam(required = false) String newPassword,
             @RequestParam(required = false) String customerType,
-            HttpSession session
+            HttpSession session,
+            RedirectAttributes redirectAttributes
     ) {
         if (!"public-register".equalsIgnoreCase(action)
                 && !"login".equalsIgnoreCase(action)
@@ -123,7 +126,12 @@ public class CustomerWebController {
                     Customer customer = customerService.findByEmail(loggedInEmail);
                     if (customer != null) {
                         customer.setPassword(newPassword);
-                        customerService.updateCustomer(customer);
+                        try {
+                            customerService.updateCustomer(customer);
+                        } catch (DuplicateEmailException ex) {
+                            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+                            return "redirect:/my-portal?passwordStatus=emailConflict";
+                        }
                     }
                 }
                 return "redirect:/my-portal?passwordStatus=updated";
@@ -134,14 +142,24 @@ public class CustomerWebController {
                 }
                 if (name != null && email != null && customerType != null) {
                     Customer customer = new Customer(0, name, email, "lumiere2026", customerType);
-                    customerService.saveCustomer(customer);
+                    try {
+                        customerService.saveCustomer(customer);
+                    } catch (DuplicateEmailException ex) {
+                        redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+                        return "redirect:/customers?action=register";
+                    }
                 }
                 break;
 
             case "public-register":
                 if (name != null && email != null && password != null && customerType != null) {
                     Customer customer = new Customer(0, name, email, password, customerType);
-                    customerService.saveCustomer(customer);
+                    try {
+                        customerService.saveCustomer(customer);
+                    } catch (DuplicateEmailException ex) {
+                        redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+                        return "redirect:/customers?action=public-register";
+                    }
                     return "redirect:/customers?action=login";
                 }
                 break;
@@ -177,7 +195,12 @@ public class CustomerWebController {
                         if (customerType != null) {
                             existing.setCustomerType(customerType);
                         }
-                        customerService.updateCustomer(existing);
+                        try {
+                            customerService.updateCustomer(existing);
+                        } catch (DuplicateEmailException ex) {
+                            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+                            return "redirect:/customers?action=update&userId=" + userId;
+                        }
                     }
                 }
                 break;
