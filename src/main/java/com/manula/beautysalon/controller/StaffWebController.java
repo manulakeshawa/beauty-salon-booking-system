@@ -156,6 +156,7 @@ public class StaffWebController {
     @PostMapping("/admin-password")
     public String updateAdminAccount(
             @RequestParam(required = false, defaultValue = "change-password") String action,
+            @RequestParam(name = "username", required = false) String newUsername,
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String currentPassword,
             @RequestParam(required = false) String newPassword,
@@ -169,12 +170,12 @@ public class StaffWebController {
 
         String username = (String) session.getAttribute("staffUsername");
         try {
-            if ("update-email".equalsIgnoreCase(action)) {
-                Employee updated = staffService.updateAdminEmail(username, email);
+            if ("update-account".equalsIgnoreCase(action)) {
+                Employee updated = staffService.updateAdminAccount(username, newUsername, email);
                 session.setAttribute("staffEmail", updated.getEmail());
                 session.setAttribute("staffName", updated.getFullName());
                 session.setAttribute("staffUsername", updated.getUsername());
-                redirectAttributes.addFlashAttribute("successMessage", "Your admin email address has been successfully updated.");
+                redirectAttributes.addFlashAttribute("successMessage", "Your admin account details have been successfully updated.");
             } else {
                 staffService.changeAdminPassword(username, currentPassword, newPassword, confirmPassword);
                 redirectAttributes.addFlashAttribute("successMessage", "Your admin password has been successfully updated.");

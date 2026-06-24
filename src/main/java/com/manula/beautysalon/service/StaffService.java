@@ -15,6 +15,9 @@ public class StaffService {
 
     private static final int MIN_PASSWORD_LENGTH = 8;
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+    private static final Pattern USERNAME_PATTERN = Pattern.compile("^[A-Za-z0-9._-]+$");
+    private static final String DUPLICATE_USERNAME_MESSAGE =
+            "This username is already used by another staff account. Please choose a different username.";
 
     private final EmployeeRepository employeeRepository;
     private final StylistService stylistService;
@@ -40,7 +43,9 @@ public class StaffService {
             return passwordService.matches(password, employee.getPassword()) ? employee : null;
         }
 
-        if (matchesDefaultManagerIdentifier(trimmedIdentifier) && passwordService.matches(password, defaultManagerPasswordHash())) {
+        if (canUseDefaultManagerFallback()
+                && matchesDefaultManagerIdentifier(trimmedIdentifier)
+                && passwordService.matches(password, defaultManagerPasswordHash())) {
             return defaultManager();
         }
 
@@ -54,8 +59,12 @@ public class StaffService {
     @Transactional
     public Employee saveEmployee(Employee employee) {
         employee.setUserId(0);
+        String normalizedUsername = normalizeUsername(employee.getUsername());
+        validateUsername(normalizedUsername);
+        employee.setUsername(normalizedUsername);
         employee.setEmail(accountEmailService.normalize(employee.getEmail()));
         employee.setPassword(passwordService.hashIfPlainText(employee.getPassword()));
+        assertUsernameAvailable(employee.getUsername(), employee.getUserId());
         accountEmailService.assertEmployeeEmailAvailable(employee.getEmail(), employee.getUserId());
         try {
             return employeeRepository.save(employee);
@@ -67,9 +76,12 @@ public class StaffService {
     @Transactional
     public void updateEmployee(Employee updatedEmployee) {
         employeeRepository.findById(updatedEmployee.getUserId()).ifPresent(existing -> {
+            String normalizedUsername = normalizeUsername(updatedEmployee.getUsername());
             String normalizedEmail = accountEmailService.normalize(updatedEmployee.getEmail());
+            validateUsername(normalizedUsername);
+            assertUsernameAvailable(normalizedUsername, updatedEmployee.getUserId());
             accountEmailService.assertEmployeeEmailAvailable(normalizedEmail, updatedEmployee.getUserId());
-            existing.setUsername(updatedEmployee.getUsername());
+            existing.setUsername(normalizedUsername);
             existing.setPassword(passwordService.hashIfPlainText(updatedEmployee.getPassword()));
             existing.setFullName(updatedEmployee.getFullName());
             existing.setEmail(normalizedEmail);
@@ -93,7 +105,7 @@ public class StaffService {
         }
 
         Employee employee = employeeRepository.findByUsernameIgnoreCase(username.trim()).orElse(null);
-        if (employee == null && matchesDefaultManagerIdentifier(username.trim())) {
+        if (employee == null && canUseDefaultManagerFallback() && matchesDefaultManagerIdentifier(username.trim())) {
             validatePasswordChange(currentPassword, newPassword, confirmPassword, defaultManagerPasswordHash());
             Employee manager = defaultManager();
             manager.setPassword(newPassword);
@@ -120,7 +132,7 @@ public class StaffService {
             return employee;
         }
 
-        if (matchesDefaultManagerIdentifier(username.trim())) {
+        if (canUseDefaultManagerFallback() && matchesDefaultManagerIdentifier(username.trim())) {
             return defaultManager();
         }
 
@@ -129,14 +141,23 @@ public class StaffService {
 
     @Transactional
     public Employee updateAdminEmail(String username, String email) {
-        if (!hasText(username)) {
+        return updateAdminAccount(username, username, email);
+    }
+
+    @Transactional
+    public Employee updateAdminAccount(String currentUsername, String newUsername, String email) {
+        if (!hasText(currentUsername)) {
             throw new IllegalArgumentException("Your admin session has expired. Please sign in again.");
         }
+
+        String normalizedUsername = normalizeUsername(newUsername);
+        validateUsername(normalizedUsername);
         validateEmail(email);
 
-        Employee employee = employeeRepository.findByUsernameIgnoreCase(username.trim()).orElse(null);
-        if (employee == null && matchesDefaultManagerIdentifier(username.trim())) {
+        Employee employee = employeeRepository.findByUsernameIgnoreCase(currentUsername.trim()).orElse(null);
+        if (employee == null && canUseDefaultManagerFallback() && matchesDefaultManagerIdentifier(currentUsername.trim())) {
             Employee manager = defaultManager();
+            manager.setUsername(normalizedUsername);
             manager.setEmail(accountEmailService.normalize(email));
             return saveEmployee(manager);
         }
@@ -146,7 +167,9 @@ public class StaffService {
         }
 
         String normalizedEmail = accountEmailService.normalize(email);
+        assertUsernameAvailable(normalizedUsername, employee.getUserId());
         accountEmailService.assertEmployeeEmailAvailable(normalizedEmail, employee.getUserId());
+        employee.setUsername(normalizedUsername);
         employee.setEmail(normalizedEmail);
         try {
             return employeeRepository.save(employee);
@@ -198,8 +221,38 @@ public class StaffService {
                 || "admin@lumieresalon.lk".equalsIgnoreCase(accountEmailService.normalize(trimmedIdentifier));
     }
 
+    private boolean canUseDefaultManagerFallback() {
+        return employeeRepository.count() == 0;
+    }
+
     private String defaultManagerPasswordHash() {
         return "pbkdf2_sha256$210000$nZjYarRaYRQNlerCO4cmkA==$hXTAKZy0H4jjZC4l9Y8uZUwsj3OuyxGV3f8mM7WHZSM=";
+    }
+
+    private String normalizeUsername(String username) {
+        return username == null ? null : username.trim();
+    }
+
+    private void validateUsername(String username) {
+        if (!hasText(username)) {
+            throw new IllegalArgumentException("Please enter a username.");
+        }
+        if (EMAIL_PATTERN.matcher(username).matches()) {
+            throw new IllegalArgumentException("Username cannot be an email address. Please use the email field for email login.");
+        }
+        if (!USERNAME_PATTERN.matcher(username).matches()) {
+            throw new IllegalArgumentException("Username may only contain letters, numbers, dots, underscores, and hyphens.");
+        }
+    }
+
+    private void assertUsernameAvailable(String username, int currentEmployeeId) {
+        boolean usernameTaken = currentEmployeeId > 0
+                ? employeeRepository.existsByUsernameIgnoreCaseAndUserIdNot(username, currentEmployeeId)
+                : employeeRepository.existsByUsernameIgnoreCase(username);
+
+        if (usernameTaken) {
+            throw new IllegalArgumentException(DUPLICATE_USERNAME_MESSAGE);
+        }
     }
 
     private void validateEmail(String email) {

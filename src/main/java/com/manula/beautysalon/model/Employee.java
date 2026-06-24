@@ -1,15 +1,18 @@
 package com.manula.beautysalon.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
 @Entity
 @Table(name = "employees", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_employees_email", columnNames = "email")
+        @UniqueConstraint(name = "uk_employees_email", columnNames = "email"),
+        @UniqueConstraint(name = "uk_employees_username", columnNames = "username")
 })
 public class Employee extends StaffMember {
 
+    @Column(nullable = false, unique = true)
     private String username;
     private String role;
     private String level;
