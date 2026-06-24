@@ -6,6 +6,8 @@ import com.manula.beautysalon.model.Review;
 import com.manula.beautysalon.service.AppointmentService;
 import com.manula.beautysalon.service.CustomerService;
 import com.manula.beautysalon.service.DuplicateEmailException;
+import com.manula.beautysalon.service.EmailService;
+import com.manula.beautysalon.service.PasswordSetupEmailResult;
 import com.manula.beautysalon.service.PasswordSetupToken;
 import com.manula.beautysalon.service.ReviewService;
 import jakarta.servlet.http.HttpSession;
@@ -15,7 +17,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.List;
 
@@ -25,11 +26,13 @@ public class CustomerWebController {
     private final CustomerService customerService;
     private final AppointmentService appointmentService;
     private final ReviewService reviewService;
+    private final EmailService emailService;
 
-    public CustomerWebController(CustomerService customerService, AppointmentService appointmentService, ReviewService reviewService) {
+    public CustomerWebController(CustomerService customerService, AppointmentService appointmentService, ReviewService reviewService, EmailService emailService) {
         this.customerService = customerService;
         this.appointmentService = appointmentService;
         this.reviewService = reviewService;
+        this.emailService = emailService;
     }
 
     @GetMapping("/customers")
@@ -143,9 +146,18 @@ public class CustomerWebController {
                     Customer customer = new Customer(0, name, email, "", customerType);
                     try {
                         PasswordSetupToken setupToken = customerService.saveAdminCreatedCustomer(customer);
-                        addSetupLinkFlash(redirectAttributes, "customer", name, setupToken);
-                        redirectAttributes.addFlashAttribute("successMessage",
-                                "Customer created. Share the first-time password setup link below.");
+                        PasswordSetupEmailResult emailResult = emailService.sendPasswordSetupEmail(
+                                customer.getEmail(),
+                                customer.getName(),
+                                "customer",
+                                setupToken
+                        );
+                        addEmailDeliveryFlash(
+                                redirectAttributes,
+                                emailResult,
+                                "Account created and password setup email sent.",
+                                "Account created, but setup email could not be sent. Please check mail settings and resend the setup email."
+                        );
                     } catch (DuplicateEmailException | IllegalArgumentException ex) {
                         redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
                         return "redirect:/customers?action=register";
@@ -218,9 +230,18 @@ public class CustomerWebController {
                     Customer customer = customerService.findById(userId);
                     try {
                         PasswordSetupToken setupToken = customerService.regeneratePasswordSetupToken(userId);
-                        addSetupLinkFlash(redirectAttributes, "customer", customer != null ? customer.getName() : "Customer", setupToken);
-                        redirectAttributes.addFlashAttribute("successMessage",
-                                "Password setup link regenerated. Share the new link below.");
+                        PasswordSetupEmailResult emailResult = emailService.sendPasswordSetupEmail(
+                                customer.getEmail(),
+                                customer.getName(),
+                                "customer",
+                                setupToken
+                        );
+                        addEmailDeliveryFlash(
+                                redirectAttributes,
+                                emailResult,
+                                "Password setup email resent.",
+                                "New setup email could not be sent. Please check mail settings and resend the setup email."
+                        );
                     } catch (IllegalArgumentException ex) {
                         redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
                     }
@@ -309,15 +330,11 @@ public class CustomerWebController {
         return "redirect:/customers?action=login";
     }
 
-    private void addSetupLinkFlash(RedirectAttributes redirectAttributes, String accountType, String accountName, PasswordSetupToken setupToken) {
-        String setupLink = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/password-setup")
-                .queryParam("type", accountType)
-                .queryParam("token", setupToken.rawToken())
-                .toUriString();
-        redirectAttributes.addFlashAttribute("setupLink", setupLink);
-        redirectAttributes.addFlashAttribute("setupAccountName", accountName);
-        redirectAttributes.addFlashAttribute("setupAccountType", accountType);
-        redirectAttributes.addFlashAttribute("setupLinkExpiresAt", setupToken.expiresAt());
+    private void addEmailDeliveryFlash(RedirectAttributes redirectAttributes, PasswordSetupEmailResult emailResult, String successMessage, String warningMessage) {
+        if (emailResult.emailSent()) {
+            redirectAttributes.addFlashAttribute("successMessage", successMessage);
+        } else {
+            redirectAttributes.addFlashAttribute("warningMessage", warningMessage);
+        }
     }
 }
