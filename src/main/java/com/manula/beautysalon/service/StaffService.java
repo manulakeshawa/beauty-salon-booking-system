@@ -7,10 +7,14 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+import java.util.regex.Pattern;
+
 @Service
 public class StaffService {
 
     private static final int MIN_PASSWORD_LENGTH = 8;
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
 
     private final EmployeeRepository employeeRepository;
     private final StylistService stylistService;
@@ -24,21 +28,19 @@ public class StaffService {
         this.passwordService = passwordService;
     }
 
-    public Employee authenticateEmployee(String username, String password) {
-        if (username == null || password == null) {
+    public Employee authenticateEmployee(String identifier, String password) {
+        if (identifier == null || password == null) {
             return null;
         }
 
-        String trimmedUsername = username.trim();
-        Employee employee = employeeRepository
-                .findByUsernameIgnoreCase(trimmedUsername)
-                .orElse(null);
+        String trimmedIdentifier = identifier.trim();
+        Employee employee = findEmployeeByIdentifier(trimmedIdentifier).orElse(null);
 
         if (employee != null) {
             return passwordService.matches(password, employee.getPassword()) ? employee : null;
         }
 
-        if ("admin".equalsIgnoreCase(trimmedUsername) && passwordService.matches(password, defaultManagerPasswordHash())) {
+        if (matchesDefaultManagerIdentifier(trimmedIdentifier) && passwordService.matches(password, defaultManagerPasswordHash())) {
             return defaultManager();
         }
 
@@ -91,7 +93,7 @@ public class StaffService {
         }
 
         Employee employee = employeeRepository.findByUsernameIgnoreCase(username.trim()).orElse(null);
-        if (employee == null && "admin".equalsIgnoreCase(username.trim())) {
+        if (employee == null && matchesDefaultManagerIdentifier(username.trim())) {
             validatePasswordChange(currentPassword, newPassword, confirmPassword, defaultManagerPasswordHash());
             Employee manager = defaultManager();
             manager.setPassword(newPassword);
@@ -106,6 +108,69 @@ public class StaffService {
         validatePasswordChange(currentPassword, newPassword, confirmPassword, employee.getPassword());
         employee.setPassword(passwordService.hash(newPassword));
         employeeRepository.save(employee);
+    }
+
+    public Employee findAdminAccount(String username) {
+        if (!hasText(username)) {
+            return null;
+        }
+
+        Employee employee = employeeRepository.findByUsernameIgnoreCase(username.trim()).orElse(null);
+        if (employee != null && "MANAGER".equalsIgnoreCase(employee.getRole())) {
+            return employee;
+        }
+
+        if (matchesDefaultManagerIdentifier(username.trim())) {
+            return defaultManager();
+        }
+
+        return null;
+    }
+
+    @Transactional
+    public Employee updateAdminEmail(String username, String email) {
+        if (!hasText(username)) {
+            throw new IllegalArgumentException("Your admin session has expired. Please sign in again.");
+        }
+        validateEmail(email);
+
+        Employee employee = employeeRepository.findByUsernameIgnoreCase(username.trim()).orElse(null);
+        if (employee == null && matchesDefaultManagerIdentifier(username.trim())) {
+            Employee manager = defaultManager();
+            manager.setEmail(accountEmailService.normalize(email));
+            return saveEmployee(manager);
+        }
+
+        if (employee == null || !"MANAGER".equalsIgnoreCase(employee.getRole())) {
+            throw new IllegalArgumentException("Your admin account could not be found. Please sign in again.");
+        }
+
+        String normalizedEmail = accountEmailService.normalize(email);
+        accountEmailService.assertEmployeeEmailAvailable(normalizedEmail, employee.getUserId());
+        employee.setEmail(normalizedEmail);
+        try {
+            return employeeRepository.save(employee);
+        } catch (DataIntegrityViolationException ex) {
+            throw new DuplicateEmailException(AccountEmailService.DUPLICATE_EMAIL_MESSAGE, ex);
+        }
+    }
+
+    private Optional<Employee> findEmployeeByIdentifier(String identifier) {
+        if (!hasText(identifier)) {
+            return Optional.empty();
+        }
+
+        Optional<Employee> employee = employeeRepository.findByUsernameIgnoreCase(identifier.trim());
+        if (employee.isPresent()) {
+            return employee;
+        }
+
+        String normalizedIdentifier = accountEmailService.normalize(identifier);
+        if (!hasText(normalizedIdentifier)) {
+            return Optional.empty();
+        }
+
+        return employeeRepository.findByEmailIgnoreCase(normalizedIdentifier);
     }
 
     private Employee defaultManager() {
@@ -123,8 +188,24 @@ public class StaffService {
         );
     }
 
+    private boolean matchesDefaultManagerIdentifier(String identifier) {
+        if (!hasText(identifier)) {
+            return false;
+        }
+
+        String trimmedIdentifier = identifier.trim();
+        return "admin".equalsIgnoreCase(trimmedIdentifier)
+                || "admin@lumieresalon.lk".equalsIgnoreCase(accountEmailService.normalize(trimmedIdentifier));
+    }
+
     private String defaultManagerPasswordHash() {
         return "pbkdf2_sha256$210000$nZjYarRaYRQNlerCO4cmkA==$hXTAKZy0H4jjZC4l9Y8uZUwsj3OuyxGV3f8mM7WHZSM=";
+    }
+
+    private void validateEmail(String email) {
+        if (!hasText(email) || !EMAIL_PATTERN.matcher(email.trim()).matches()) {
+            throw new IllegalArgumentException("Please enter a valid email address.");
+        }
     }
 
     private void validatePasswordChange(String currentPassword, String newPassword, String confirmPassword, String storedPasswordHash) {

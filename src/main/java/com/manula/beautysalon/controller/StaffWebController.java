@@ -138,18 +138,28 @@ public class StaffWebController {
     }
 
     @GetMapping("/admin-password")
-    public String showAdminPasswordForm(HttpSession session) {
+    public String showAdminPasswordForm(HttpSession session, Model model) {
         if (!"MANAGER".equalsIgnoreCase((String) session.getAttribute("staffRole"))) {
             return "redirect:/staff-login";
         }
+
+        Employee admin = staffService.findAdminAccount((String) session.getAttribute("staffUsername"));
+        if (admin == null) {
+            session.invalidate();
+            return "redirect:/staff-login";
+        }
+
+        model.addAttribute("admin", admin);
         return "admin-password";
     }
 
     @PostMapping("/admin-password")
-    public String changeAdminPassword(
-            @RequestParam String currentPassword,
-            @RequestParam String newPassword,
-            @RequestParam String confirmPassword,
+    public String updateAdminAccount(
+            @RequestParam(required = false, defaultValue = "change-password") String action,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String currentPassword,
+            @RequestParam(required = false) String newPassword,
+            @RequestParam(required = false) String confirmPassword,
             HttpSession session,
             RedirectAttributes redirectAttributes
     ) {
@@ -159,9 +169,17 @@ public class StaffWebController {
 
         String username = (String) session.getAttribute("staffUsername");
         try {
-            staffService.changeAdminPassword(username, currentPassword, newPassword, confirmPassword);
-            redirectAttributes.addFlashAttribute("successMessage", "Your admin password has been successfully updated.");
-        } catch (IllegalArgumentException ex) {
+            if ("update-email".equalsIgnoreCase(action)) {
+                Employee updated = staffService.updateAdminEmail(username, email);
+                session.setAttribute("staffEmail", updated.getEmail());
+                session.setAttribute("staffName", updated.getFullName());
+                session.setAttribute("staffUsername", updated.getUsername());
+                redirectAttributes.addFlashAttribute("successMessage", "Your admin email address has been successfully updated.");
+            } else {
+                staffService.changeAdminPassword(username, currentPassword, newPassword, confirmPassword);
+                redirectAttributes.addFlashAttribute("successMessage", "Your admin password has been successfully updated.");
+            }
+        } catch (DuplicateEmailException | IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
 

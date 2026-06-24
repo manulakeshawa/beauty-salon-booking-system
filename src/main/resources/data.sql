@@ -10,7 +10,7 @@
 -- isabellsil12@email.com/bella1234, somakumary@email.com/dutchythin,
 -- ravi.the@email.com/123456, testing@email.com/testing123,
 -- emma@test.com/c, mighara@email.com/mighara1234.
--- Staff/admin: admin/lumiere2026.
+-- Staff/admin: admin or admin@lumieresalon.lk/lumiere2026.
 -- Stylists: Nalika/#nalika@lume, Kasun/#kasun@lume, Kamindu/#kamindu@lume,
 -- Shenali/#shenali@lume, Dinithi/#dinithi@lume, Ruwan/#ruwan@lume, Zara/#zara@lume.
 
