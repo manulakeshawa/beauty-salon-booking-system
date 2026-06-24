@@ -46,6 +46,39 @@
         </div>
     </div>
 
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm border-0 mb-4" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <span th:text="${successMessage}">Stylist created.</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm border-0 mb-4" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${errorMessage}">Unable to complete request.</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div th:if="${setupLink}" class="alert alert-light border rounded-4 shadow-sm mb-4" role="alert">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+            <div>
+                <div class="fw-bold mb-1">
+                    <i class="bi bi-link-45deg me-2" style="color: var(--lumiere-pink);"></i>
+                    Password setup link for <span th:text="${setupAccountName}">stylist</span>
+                </div>
+                <div class="small text-muted">Copy and share this one-time link. It expires in 48 hours.</div>
+            </div>
+            <div class="input-group" style="max-width: 620px;">
+                <input type="text" id="setupLinkInput" class="form-control" th:value="${setupLink}" readonly>
+                <button class="btn btn-lumiere-outline" type="button" onclick="copySetupLink()">
+                    <i class="bi bi-clipboard me-1"></i>Copy
+                </button>
+                <a class="btn btn-lumiere" th:href="${setupLink}" target="_blank" rel="noopener">
+                    <i class="bi bi-box-arrow-up-right me-1"></i>Open
+                </a>
+            </div>
+        </div>
+    </div>
+
     <div class="card panel">
         <div class="panel-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
             <h2 class="h5 mb-0"><i class="bi bi-gem me-2"></i>Stylist Team Directory</h2>
@@ -70,6 +103,7 @@
                         <th scope="col" class="ps-3">Level</th> 
                         <th scope="col">Welcome Message</th>
                         <th scope="col" class="text-center">Availability</th>
+                        <th scope="col" class="text-center">Password</th>
                         <th scope="col" class="text-end pe-4">Actions</th>
                     </tr>
                     </thead>
@@ -98,8 +132,22 @@
                                   th:text="${stylist.availabilityStatus}">
                             </span>
                         </td>
+                        <td class="text-center">
+                            <span th:if="${stylist.passwordSetupRequired}" class="badge rounded-pill text-bg-warning">Setup needed</span>
+                            <span th:unless="${stylist.passwordSetupRequired}" class="badge rounded-pill text-bg-success">Set</span>
+                        </td>
                         <td class="text-end pe-4">
                             <div th:if="${session.staffRole == 'MANAGER'}" class="btn-group">
+                                <form th:if="${stylist.passwordSetupRequired}" th:action="@{/stylists}" method="post" class="d-inline">
+                                    <input type="hidden" name="action" value="regenerate-password-setup">
+                                    <input type="hidden" name="userId" th:value="${stylist.userId}">
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-secondary border-0 rounded-circle me-1"
+                                            title="Regenerate password setup link"
+                                            onclick="return confirm('Generate a new password setup link for this stylist?');">
+                                        <i class="bi bi-link-45deg fs-5"></i>
+                                    </button>
+                                </form>
                                 <a th:href="@{/stylists(action='update', userId=${stylist.userId})}"
                                    class="btn btn-sm btn-outline-secondary border-0 rounded-circle me-1">
                                     <i class="bi bi-pencil-square fs-5"></i>
@@ -114,7 +162,7 @@
                     </tr>
 
                     <tr th:if="${stylists == null or stylists.isEmpty()}">
-                        <td colspan="7" class="text-center py-5">
+                        <td colspan="8" class="text-center py-5">
                             <i class="bi bi-people display-4 text-muted mb-3 d-block opacity-25"></i>
                             <p class="text-secondary fs-5 mb-0">No stylists found in the directory.</p>
                         </td>
@@ -136,6 +184,16 @@
             row.style.display = text.includes(filter) ? "" : "none";
         });
     });
+
+    function copySetupLink() {
+        const input = document.getElementById('setupLinkInput');
+        if (!input) return;
+        input.select();
+        input.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(input.value).catch(function () {
+            document.execCommand('copy');
+        });
+    }
 </script>
 </body>
 </html>

@@ -2,6 +2,7 @@ package com.manula.beautysalon.controller;
 
 import com.manula.beautysalon.model.Stylist;
 import com.manula.beautysalon.service.DuplicateEmailException;
+import com.manula.beautysalon.service.PasswordSetupToken;
 import com.manula.beautysalon.service.StylistService;
 import com.manula.beautysalon.util.SecurityUtils;
 import jakarta.servlet.http.HttpSession;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.List;
 
@@ -127,15 +129,18 @@ public class StylistWebController {
                             0,
                             name,
                             email,
-                            "LumiereStaff2026",
+                            "",
                             specialty,
                             level,
                             available != null && available,
                             "default.jpg"
                     );
                     try {
-                        stylistService.saveStylist(stylist);
-                    } catch (DuplicateEmailException ex) {
+                        PasswordSetupToken setupToken = stylistService.saveAdminCreatedStylist(stylist);
+                        addSetupLinkFlash(redirectAttributes, "stylist", name, setupToken);
+                        redirectAttributes.addFlashAttribute("successMessage",
+                                "Stylist created. Share the first-time password setup link below.");
+                    } catch (DuplicateEmailException | IllegalArgumentException ex) {
                         redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
                         return "redirect:/stylists?action=register";
                     }
@@ -191,10 +196,38 @@ public class StylistWebController {
                     }
                 }
                 return "redirect:/stylists?action=availability";
+            case "regenerate-password-setup":
+                if (!SecurityUtils.isManager(session)) {
+                    return "redirect:/admin?error=unauthorized";
+                }
+                if (userId != null) {
+                    Stylist stylist = stylistService.findById(userId);
+                    try {
+                        PasswordSetupToken setupToken = stylistService.regeneratePasswordSetupToken(userId);
+                        addSetupLinkFlash(redirectAttributes, "stylist", stylist != null ? stylist.getName() : "Stylist", setupToken);
+                        redirectAttributes.addFlashAttribute("successMessage",
+                                "Password setup link regenerated. Share the new link below.");
+                    } catch (IllegalArgumentException ex) {
+                        redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+                    }
+                }
+                return "redirect:/stylists?action=list";
             default:
                 break;
         }
 
         return "redirect:/stylists?action=list";
+    }
+
+    private void addSetupLinkFlash(RedirectAttributes redirectAttributes, String accountType, String accountName, PasswordSetupToken setupToken) {
+        String setupLink = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/password-setup")
+                .queryParam("type", accountType)
+                .queryParam("token", setupToken.rawToken())
+                .toUriString();
+        redirectAttributes.addFlashAttribute("setupLink", setupLink);
+        redirectAttributes.addFlashAttribute("setupAccountName", accountName);
+        redirectAttributes.addFlashAttribute("setupAccountType", accountType);
+        redirectAttributes.addFlashAttribute("setupLinkExpiresAt", setupToken.expiresAt());
     }
 }

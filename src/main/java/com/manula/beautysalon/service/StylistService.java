@@ -17,6 +17,8 @@ public class StylistService {
 
     private static final int MIN_PASSWORD_LENGTH = 8;
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+    public static final String PASSWORD_SETUP_PENDING_LOGIN_MESSAGE =
+            "Your account exists, but a password has not been set yet. Please use your password setup link.";
 
     private final StylistRepository stylistRepository;
     private final AppointmentRepository appointmentRepository;
@@ -24,14 +26,16 @@ public class StylistService {
     private final SalonServiceRepository salonServiceRepository;
     private final AccountEmailService accountEmailService;
     private final PasswordService passwordService;
+    private final PasswordSetupTokenService passwordSetupTokenService;
 
-    public StylistService(StylistRepository stylistRepository, AppointmentRepository appointmentRepository, ReviewRepository reviewRepository, SalonServiceRepository salonServiceRepository, AccountEmailService accountEmailService, PasswordService passwordService) {
+    public StylistService(StylistRepository stylistRepository, AppointmentRepository appointmentRepository, ReviewRepository reviewRepository, SalonServiceRepository salonServiceRepository, AccountEmailService accountEmailService, PasswordService passwordService, PasswordSetupTokenService passwordSetupTokenService) {
         this.stylistRepository = stylistRepository;
         this.appointmentRepository = appointmentRepository;
         this.reviewRepository = reviewRepository;
         this.salonServiceRepository = salonServiceRepository;
         this.accountEmailService = accountEmailService;
         this.passwordService = passwordService;
+        this.passwordSetupTokenService = passwordSetupTokenService;
     }
 
     @Transactional
@@ -43,6 +47,23 @@ public class StylistService {
         accountEmailService.assertStylistEmailAvailable(stylist.getEmail(), stylist.getUserId());
         try {
             return stylistRepository.save(stylist);
+        } catch (DataIntegrityViolationException ex) {
+            throw new DuplicateEmailException(AccountEmailService.DUPLICATE_EMAIL_MESSAGE, ex);
+        }
+    }
+
+    @Transactional
+    public PasswordSetupToken saveAdminCreatedStylist(Stylist stylist) {
+        stylist.setUserId(0);
+        validateProfile(stylist.getName(), stylist.getEmail());
+        stylist.setEmail(accountEmailService.normalize(stylist.getEmail()));
+        stylist.setPassword("");
+        stylist.setActive(true);
+        accountEmailService.assertStylistEmailAvailable(stylist.getEmail(), stylist.getUserId());
+        PasswordSetupToken token = assignPasswordSetupToken(stylist);
+        try {
+            stylistRepository.save(stylist);
+            return token;
         } catch (DataIntegrityViolationException ex) {
             throw new DuplicateEmailException(AccountEmailService.DUPLICATE_EMAIL_MESSAGE, ex);
         }
@@ -69,16 +90,9 @@ public class StylistService {
             return null;
         }
 
-        String trimmedIdentifier = identifier.trim();
-        for (Stylist stylist : readActiveStylists()) {
-            String idString = String.valueOf(stylist.getUserId());
-            boolean identifierMatches = stylist.getName().equalsIgnoreCase(trimmedIdentifier)
-                    || stylist.getEmail().equalsIgnoreCase(trimmedIdentifier)
-                    || idString.equals(trimmedIdentifier);
-
-            if (identifierMatches && stylist.isActive() && passwordService.matches(password, stylist.getPassword())) {
-                return stylist;
-            }
+        Stylist stylist = findActiveByIdentifier(identifier);
+        if (stylist != null && passwordService.matches(password, stylist.getPassword())) {
+            return stylist;
         }
         return null;
     }
@@ -180,6 +194,36 @@ public class StylistService {
         return stylistRepository.findByEmailIgnoreCase(accountEmailService.normalize(email)).orElse(null);
     }
 
+    public boolean isPasswordSetupPending(String identifier) {
+        Stylist stylist = findActiveByIdentifier(identifier);
+        return stylist != null && stylist.isPasswordSetupRequired();
+    }
+
+    public Stylist previewPasswordSetup(String rawToken) {
+        return requireValidPasswordSetupStylist(rawToken);
+    }
+
+    @Transactional
+    public Stylist setupPassword(String rawToken, String newPassword, String confirmPassword) {
+        Stylist stylist = requireValidPasswordSetupStylist(rawToken);
+        validateNewPassword(newPassword, confirmPassword);
+        stylist.setPassword(passwordService.hash(newPassword));
+        stylist.clearPasswordSetupToken();
+        return stylistRepository.save(stylist);
+    }
+
+    @Transactional
+    public PasswordSetupToken regeneratePasswordSetupToken(int userId) {
+        Stylist stylist = stylistRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Stylist account could not be found."));
+        if (stylist.isPasswordSet()) {
+            throw new IllegalArgumentException("This stylist already has a password set.");
+        }
+        PasswordSetupToken token = assignPasswordSetupToken(stylist);
+        stylistRepository.save(stylist);
+        return token;
+    }
+
     public int generateNextStylistId() {
         return stylistRepository.findTopByOrderByUserIdDesc()
                 .map(stylist -> stylist.getUserId() + 1)
@@ -212,11 +256,60 @@ public class StylistService {
         if (!passwordService.matches(currentPassword, storedPasswordHash)) {
             throw new IllegalArgumentException("The current password you entered is incorrect.");
         }
+        validateNewPassword(newPassword, confirmPassword);
+    }
+
+    private void validateNewPassword(String newPassword, String confirmPassword) {
         if (!hasText(newPassword) || newPassword.length() < MIN_PASSWORD_LENGTH) {
             throw new IllegalArgumentException("New password must be at least " + MIN_PASSWORD_LENGTH + " characters long.");
         }
         if (!newPassword.equals(confirmPassword)) {
             throw new IllegalArgumentException("New password and confirm password must match.");
         }
+    }
+
+    private PasswordSetupToken assignPasswordSetupToken(Stylist stylist) {
+        PasswordSetupToken token = passwordSetupTokenService.generateToken();
+        stylist.setPasswordSetupTokenHash(passwordSetupTokenService.hashToken(token.rawToken()));
+        stylist.setPasswordSetupTokenExpiresAt(token.expiresAt());
+        return token;
+    }
+
+    private Stylist requireValidPasswordSetupStylist(String rawToken) {
+        if (!hasText(rawToken)) {
+            throw new IllegalArgumentException("This password setup link is invalid or has already been used.");
+        }
+        String tokenHash = passwordSetupTokenService.hashToken(rawToken);
+        Stylist stylist = stylistRepository.findByPasswordSetupTokenHash(tokenHash).orElse(null);
+        if (stylist == null || stylist.isPasswordSet()) {
+            throw new IllegalArgumentException("This password setup link is invalid or has already been used.");
+        }
+        if (passwordSetupTokenService.isExpired(stylist.getPasswordSetupTokenExpiresAt())) {
+            throw new IllegalArgumentException("This password setup link has expired. Please ask an administrator to regenerate it.");
+        }
+        return stylist;
+    }
+
+    private Stylist findActiveByIdentifier(String identifier) {
+        if (!hasText(identifier)) {
+            return null;
+        }
+
+        String trimmedIdentifier = identifier.trim();
+        for (Stylist stylist : readActiveStylists()) {
+            String idString = String.valueOf(stylist.getUserId());
+            boolean identifierMatches = equalsIgnoreCase(stylist.getName(), trimmedIdentifier)
+                    || equalsIgnoreCase(stylist.getEmail(), trimmedIdentifier)
+                    || idString.equals(trimmedIdentifier);
+
+            if (identifierMatches && stylist.isActive()) {
+                return stylist;
+            }
+        }
+        return null;
+    }
+
+    private boolean equalsIgnoreCase(String left, String right) {
+        return left != null && right != null && left.equalsIgnoreCase(right);
     }
 }

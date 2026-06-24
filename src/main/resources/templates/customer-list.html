@@ -47,6 +47,39 @@
         </div>
     </div>
 
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm border-0 mb-4" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <span th:text="${successMessage}">Customer created.</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm border-0 mb-4" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${errorMessage}">Unable to complete request.</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div th:if="${setupLink}" class="alert alert-light border rounded-4 shadow-sm mb-4" role="alert">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+            <div>
+                <div class="fw-bold mb-1">
+                    <i class="bi bi-link-45deg me-2" style="color: var(--lumiere-pink);"></i>
+                    Password setup link for <span th:text="${setupAccountName}">customer</span>
+                </div>
+                <div class="small text-muted">Copy and share this one-time link. It expires in 48 hours.</div>
+            </div>
+            <div class="input-group" style="max-width: 620px;">
+                <input type="text" id="setupLinkInput" class="form-control" th:value="${setupLink}" readonly>
+                <button class="btn btn-lumiere-outline" type="button" onclick="copySetupLink()">
+                    <i class="bi bi-clipboard me-1"></i>Copy
+                </button>
+                <a class="btn btn-lumiere" th:href="${setupLink}" target="_blank" rel="noopener">
+                    <i class="bi bi-box-arrow-up-right me-1"></i>Open
+                </a>
+            </div>
+        </div>
+    </div>
+
     <div class="card panel">
         <div class="panel-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
             <h2 class="h5 mb-0"><i class="bi bi-people me-2"></i>Active Clients</h2>
@@ -70,6 +103,7 @@
                         <th scope="col">Name</th>
                         <th scope="col">Email Address</th>
                         <th scope="col">Status</th>
+                        <th scope="col">Password</th>
                         <th scope="col">System Message</th>
                         <th scope="col" class="text-end pe-4">Actions</th>
                     </tr>
@@ -84,9 +118,23 @@
                         <td>
                             <span class="badge rounded-pill badge-lumiere" th:text="${customer.customerType}"></span>
                         </td>
+                        <td>
+                            <span th:if="${customer.passwordSetupRequired}" class="badge rounded-pill text-bg-warning">Setup needed</span>
+                            <span th:unless="${customer.passwordSetupRequired}" class="badge rounded-pill text-bg-success">Set</span>
+                        </td>
                         <td class="small italic text-muted" th:text="${customer.welcomeMessage}"></td>
                         <td class="text-end pe-4">
                             <div th:if="${session.staffRole == 'MANAGER'}" class="btn-group">
+                                <form th:if="${customer.passwordSetupRequired}" th:action="@{/customers}" method="post" class="d-inline">
+                                    <input type="hidden" name="action" value="regenerate-password-setup">
+                                    <input type="hidden" name="userId" th:value="${customer.userId}">
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-secondary border-0 rounded-circle me-1"
+                                            title="Regenerate password setup link"
+                                            onclick="return confirm('Generate a new password setup link for this customer?');">
+                                        <i class="bi bi-link-45deg fs-5"></i>
+                                    </button>
+                                </form>
                                 <a th:href="@{/customers(action='update', userId=${customer.userId})}" 
                                    class="btn btn-sm btn-outline-secondary border-0 rounded-circle me-1" title="Edit Profile">
                                     <i class="bi bi-pencil-square fs-5"></i>
@@ -102,7 +150,7 @@
                     </tr>
                     
                     <tr th:if="${customers == null or customers.isEmpty()}">
-                        <td colspan="6" class="text-center py-5">
+                        <td colspan="7" class="text-center py-5">
                             <i class="bi bi-person-slash display-4 text-muted mb-3 d-block opacity-25"></i>
                             <p class="text-secondary fs-5 mb-0">No customers registered in the system yet.</p>
                         </td>
@@ -122,11 +170,20 @@
         let rows = document.querySelectorAll("#customerTable tbody tr");
 
         rows.forEach(row => {
-            // Check Name, Email, and Type columns for a match
             let text = row.innerText.toLowerCase();
             row.style.display = text.includes(filter) ? "" : "none";
         });
     });
+
+    function copySetupLink() {
+        const input = document.getElementById('setupLinkInput');
+        if (!input) return;
+        input.select();
+        input.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(input.value).catch(function () {
+            document.execCommand('copy');
+        });
+    }
 </script>
 </body>
 </html>

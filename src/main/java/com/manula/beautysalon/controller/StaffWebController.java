@@ -60,6 +60,11 @@ public class StaffWebController {
             return "redirect:/stylist-portal";
         }
 
+        if (stylistService.isPasswordSetupPending(username)) {
+            model.addAttribute("error", StylistService.PASSWORD_SETUP_PENDING_LOGIN_MESSAGE);
+            return "staff-login";
+        }
+
         model.addAttribute("error", "Invalid credentials. Access denied.");
         return "staff-login";
     }

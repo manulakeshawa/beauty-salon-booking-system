@@ -23,7 +23,7 @@ public abstract class User {
     @Column(nullable = false)
     private String email;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String password;
 
     protected User() {
@@ -66,6 +66,10 @@ public abstract class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public boolean isPasswordSet() {
+        return password != null && !password.isBlank();
     }
 
     public abstract String getWelcomeMessage();

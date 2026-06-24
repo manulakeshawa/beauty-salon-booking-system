@@ -1,8 +1,11 @@
 package com.manula.beautysalon.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "customers", uniqueConstraints = {
@@ -11,6 +14,12 @@ import jakarta.persistence.UniqueConstraint;
 public class Customer extends User {
 
     private String customerType;
+
+    @Column(name = "password_setup_token_hash", length = 128)
+    private String passwordSetupTokenHash;
+
+    @Column(name = "password_setup_token_expires_at")
+    private LocalDateTime passwordSetupTokenExpiresAt;
 
     public Customer() {
         super();
@@ -27,6 +36,31 @@ public class Customer extends User {
 
     public void setCustomerType(String customerType) {
         this.customerType = customerType;
+    }
+
+    public String getPasswordSetupTokenHash() {
+        return passwordSetupTokenHash;
+    }
+
+    public void setPasswordSetupTokenHash(String passwordSetupTokenHash) {
+        this.passwordSetupTokenHash = passwordSetupTokenHash;
+    }
+
+    public LocalDateTime getPasswordSetupTokenExpiresAt() {
+        return passwordSetupTokenExpiresAt;
+    }
+
+    public void setPasswordSetupTokenExpiresAt(LocalDateTime passwordSetupTokenExpiresAt) {
+        this.passwordSetupTokenExpiresAt = passwordSetupTokenExpiresAt;
+    }
+
+    public boolean isPasswordSetupRequired() {
+        return !isPasswordSet();
+    }
+
+    public void clearPasswordSetupToken() {
+        this.passwordSetupTokenHash = null;
+        this.passwordSetupTokenExpiresAt = null;
     }
 
     @Override

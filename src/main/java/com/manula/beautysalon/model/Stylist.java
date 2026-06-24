@@ -1,10 +1,13 @@
 package com.manula.beautysalon.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "stylists", uniqueConstraints = {
@@ -17,6 +20,12 @@ public class Stylist extends StaffMember {
     private boolean available;
     private String imageFileName;
     private Boolean active = true;
+
+    @Column(name = "password_setup_token_hash", length = 128)
+    private String passwordSetupTokenHash;
+
+    @Column(name = "password_setup_token_expires_at")
+    private LocalDateTime passwordSetupTokenExpiresAt;
 
     public Stylist() {
         super();
@@ -86,6 +95,31 @@ public class Stylist extends StaffMember {
 
     public void setActive(Boolean active) {
         this.active = active;
+    }
+
+    public String getPasswordSetupTokenHash() {
+        return passwordSetupTokenHash;
+    }
+
+    public void setPasswordSetupTokenHash(String passwordSetupTokenHash) {
+        this.passwordSetupTokenHash = passwordSetupTokenHash;
+    }
+
+    public LocalDateTime getPasswordSetupTokenExpiresAt() {
+        return passwordSetupTokenExpiresAt;
+    }
+
+    public void setPasswordSetupTokenExpiresAt(LocalDateTime passwordSetupTokenExpiresAt) {
+        this.passwordSetupTokenExpiresAt = passwordSetupTokenExpiresAt;
+    }
+
+    public boolean isPasswordSetupRequired() {
+        return !isPasswordSet();
+    }
+
+    public void clearPasswordSetupToken() {
+        this.passwordSetupTokenHash = null;
+        this.passwordSetupTokenExpiresAt = null;
     }
 
     @Override

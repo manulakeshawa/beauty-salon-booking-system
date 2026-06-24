@@ -122,11 +122,11 @@
                     <div class="input-group password-container">
                         <span class="input-group-text"><i class="bi bi-shield-lock"></i></span>
                         <input type="password" id="password" name="password" class="form-control" 
-                               placeholder="Min 8 chars, at least 1 number" 
-                               pattern="^(?=.*[0-9]).{8,}$" required 
+                               placeholder="At least 8 characters"
+                               minlength="8" required
                                style="border-radius: 0 12px 12px 0 !important;">
                         <i class="bi bi-eye password-toggle" id="togglePassword"></i>
-                        <div class="invalid-feedback">Password must be at least 8 characters long and contain at least one number.</div>
+                        <div class="invalid-feedback">Password must be at least 8 characters long.</div>
                     </div>
                 </div>
 

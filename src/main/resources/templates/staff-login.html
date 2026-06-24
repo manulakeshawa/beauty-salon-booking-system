@@ -59,6 +59,10 @@
                 </div>
                 
                 <div class="card-body p-4 p-md-5">
+                    <div th:if="${successMessage}" class="alert alert-success text-center mb-4 py-2 rounded-3" role="alert">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        <span th:text="${successMessage}">Your password has been set.</span>
+                    </div>
                     
                     <div th:if="${error}" class="alert alert-lumiere text-center mb-4 py-2" role="alert">
                         <i class="bi bi-exclamation-circle me-2"></i>

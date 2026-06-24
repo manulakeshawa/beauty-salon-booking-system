@@ -16,29 +16,51 @@ public class CustomerService {
 
     private static final int MIN_PASSWORD_LENGTH = 8;
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+    public static final String PASSWORD_SETUP_PENDING_LOGIN_MESSAGE =
+            "Your account exists, but a password has not been set yet. Please use your password setup link.";
 
     private final CustomerRepository customerRepository;
     private final AppointmentRepository appointmentRepository;
     private final ReviewRepository reviewRepository;
     private final AccountEmailService accountEmailService;
     private final PasswordService passwordService;
+    private final PasswordSetupTokenService passwordSetupTokenService;
 
-    public CustomerService(CustomerRepository customerRepository, AppointmentRepository appointmentRepository, ReviewRepository reviewRepository, AccountEmailService accountEmailService, PasswordService passwordService) {
+    public CustomerService(CustomerRepository customerRepository, AppointmentRepository appointmentRepository, ReviewRepository reviewRepository, AccountEmailService accountEmailService, PasswordService passwordService, PasswordSetupTokenService passwordSetupTokenService) {
         this.customerRepository = customerRepository;
         this.appointmentRepository = appointmentRepository;
         this.reviewRepository = reviewRepository;
         this.accountEmailService = accountEmailService;
         this.passwordService = passwordService;
+        this.passwordSetupTokenService = passwordSetupTokenService;
     }
 
     @Transactional
     public Customer saveCustomer(Customer customer) {
         customer.setUserId(0);
+        validateProfile(customer.getName(), customer.getEmail());
+        validateNewPassword(customer.getPassword(), customer.getPassword());
         customer.setEmail(accountEmailService.normalize(customer.getEmail()));
-        customer.setPassword(passwordService.hashIfPlainText(customer.getPassword()));
+        customer.setPassword(passwordService.hash(customer.getPassword()));
         accountEmailService.assertCustomerEmailAvailable(customer.getEmail(), customer.getUserId());
         try {
             return customerRepository.save(customer);
+        } catch (DataIntegrityViolationException ex) {
+            throw new DuplicateEmailException(AccountEmailService.DUPLICATE_EMAIL_MESSAGE, ex);
+        }
+    }
+
+    @Transactional
+    public PasswordSetupToken saveAdminCreatedCustomer(Customer customer) {
+        customer.setUserId(0);
+        validateProfile(customer.getName(), customer.getEmail());
+        customer.setEmail(accountEmailService.normalize(customer.getEmail()));
+        customer.setPassword("");
+        accountEmailService.assertCustomerEmailAvailable(customer.getEmail(), customer.getUserId());
+        PasswordSetupToken token = assignPasswordSetupToken(customer);
+        try {
+            customerRepository.save(customer);
+            return token;
         } catch (DataIntegrityViolationException ex) {
             throw new DuplicateEmailException(AccountEmailService.DUPLICATE_EMAIL_MESSAGE, ex);
         }
@@ -144,6 +166,36 @@ public class CustomerService {
         return customer;
     }
 
+    public boolean isPasswordSetupPending(String email) {
+        Customer customer = findByEmail(email);
+        return customer != null && customer.isPasswordSetupRequired();
+    }
+
+    public Customer previewPasswordSetup(String rawToken) {
+        return requireValidPasswordSetupCustomer(rawToken);
+    }
+
+    @Transactional
+    public Customer setupPassword(String rawToken, String newPassword, String confirmPassword) {
+        Customer customer = requireValidPasswordSetupCustomer(rawToken);
+        validateNewPassword(newPassword, confirmPassword);
+        customer.setPassword(passwordService.hash(newPassword));
+        customer.clearPasswordSetupToken();
+        return customerRepository.save(customer);
+    }
+
+    @Transactional
+    public PasswordSetupToken regeneratePasswordSetupToken(int userId) {
+        Customer customer = customerRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Customer account could not be found."));
+        if (customer.isPasswordSet()) {
+            throw new IllegalArgumentException("This customer already has a password set.");
+        }
+        PasswordSetupToken token = assignPasswordSetupToken(customer);
+        customerRepository.save(customer);
+        return token;
+    }
+
     public int generateNextCustomerId() {
         return customerRepository.findTopByOrderByUserIdDesc()
                 .map(customer -> customer.getUserId() + 1)
@@ -170,11 +222,37 @@ public class CustomerService {
         if (!passwordService.matches(currentPassword, storedPasswordHash)) {
             throw new IllegalArgumentException("The current password you entered is incorrect.");
         }
+        validateNewPassword(newPassword, confirmPassword);
+    }
+
+    private void validateNewPassword(String newPassword, String confirmPassword) {
         if (!hasText(newPassword) || newPassword.length() < MIN_PASSWORD_LENGTH) {
             throw new IllegalArgumentException("New password must be at least " + MIN_PASSWORD_LENGTH + " characters long.");
         }
         if (!newPassword.equals(confirmPassword)) {
             throw new IllegalArgumentException("New password and confirm password must match.");
         }
+    }
+
+    private PasswordSetupToken assignPasswordSetupToken(Customer customer) {
+        PasswordSetupToken token = passwordSetupTokenService.generateToken();
+        customer.setPasswordSetupTokenHash(passwordSetupTokenService.hashToken(token.rawToken()));
+        customer.setPasswordSetupTokenExpiresAt(token.expiresAt());
+        return token;
+    }
+
+    private Customer requireValidPasswordSetupCustomer(String rawToken) {
+        if (!hasText(rawToken)) {
+            throw new IllegalArgumentException("This password setup link is invalid or has already been used.");
+        }
+        String tokenHash = passwordSetupTokenService.hashToken(rawToken);
+        Customer customer = customerRepository.findByPasswordSetupTokenHash(tokenHash).orElse(null);
+        if (customer == null || customer.isPasswordSet()) {
+            throw new IllegalArgumentException("This password setup link is invalid or has already been used.");
+        }
+        if (passwordSetupTokenService.isExpired(customer.getPasswordSetupTokenExpiresAt())) {
+            throw new IllegalArgumentException("This password setup link has expired. Please ask an administrator to regenerate it.");
+        }
+        return customer;
     }
 }
