@@ -55,10 +55,38 @@ public class EmailService {
         }
     }
 
+    public boolean sendPasswordResetEmail(
+            String recipientEmail,
+            String recipientName,
+            String accountType,
+            PasswordResetToken resetToken
+    ) {
+        String resetLink = buildPasswordResetLink(resetToken.rawToken());
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromAddress);
+            message.setTo(recipientEmail);
+            message.setSubject("Reset your Lumiere Salon password");
+            message.setText(buildPasswordResetMessage(recipientName, accountType, resetLink, resetToken.expiresAt()));
+            mailSender.send(message);
+            return true;
+        } catch (MailException ex) {
+            logger.warn("Password reset email could not be sent to {}: {}", recipientEmail, ex.getMessage());
+            return false;
+        }
+    }
+
     private String buildPasswordSetupLink(String accountType, String rawToken) {
         return UriComponentsBuilder.fromUriString(normalizedBaseUrl())
                 .path("/password-setup")
                 .queryParam("type", accountType.toLowerCase(Locale.ROOT))
+                .queryParam("token", rawToken)
+                .toUriString();
+    }
+
+    private String buildPasswordResetLink(String rawToken) {
+        return UriComponentsBuilder.fromUriString(normalizedBaseUrl())
+                .path("/reset-password")
                 .queryParam("token", rawToken)
                 .toUriString();
     }
@@ -79,6 +107,20 @@ public class EmailService {
                 + setupLink + "\n\n"
                 + "This link expires at " + EXPIRY_FORMATTER.format(expiresAt) + ".\n\n"
                 + "Do not share this link with anyone. Anyone with access to it can set your password until it expires.\n\n"
+                + "Thank you,\n"
+                + "Lumiere Salon";
+    }
+
+    private String buildPasswordResetMessage(String recipientName, String accountType, String resetLink, LocalDateTime expiresAt) {
+        String displayName = recipientName == null || recipientName.isBlank() ? "there" : recipientName.trim();
+        String displayAccountType = accountType == null || accountType.isBlank() ? "salon" : accountType.toLowerCase(Locale.ROOT);
+        return "Hello " + displayName + ",\n\n"
+                + "We received a request to reset the password for your " + displayAccountType + " account at Lumiere Salon.\n\n"
+                + "Reset your password using this link:\n"
+                + resetLink + "\n\n"
+                + "This link expires at " + EXPIRY_FORMATTER.format(expiresAt) + ".\n\n"
+                + "If you did not request this password reset, you can ignore this email.\n"
+                + "Do not share this link with anyone. Anyone with access to it can reset your password until it expires.\n\n"
                 + "Thank you,\n"
                 + "Lumiere Salon";
     }

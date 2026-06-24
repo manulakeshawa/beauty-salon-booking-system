@@ -11,6 +11,8 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
 
     Optional<Employee> findByEmailIgnoreCase(String email);
 
+    Optional<Employee> findByPasswordResetTokenHash(String passwordResetTokenHash);
+
     boolean existsByEmailIgnoreCase(String email);
 
     boolean existsByEmailIgnoreCaseAndUserIdNot(String email, int userId);

@@ -13,6 +13,8 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
 
     Optional<Customer> findByPasswordSetupTokenHash(String passwordSetupTokenHash);
 
+    Optional<Customer> findByPasswordResetTokenHash(String passwordResetTokenHash);
+
     boolean existsByEmailIgnoreCase(String email);
 
     boolean existsByEmailIgnoreCaseAndUserIdNot(String email, int userId);

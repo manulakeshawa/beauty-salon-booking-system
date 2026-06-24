@@ -20,6 +20,8 @@ public interface StylistRepository extends JpaRepository<Stylist, Integer> {
 
     Optional<Stylist> findByPasswordSetupTokenHash(String passwordSetupTokenHash);
 
+    Optional<Stylist> findByPasswordResetTokenHash(String passwordResetTokenHash);
+
     boolean existsByEmailIgnoreCase(String email);
 
     boolean existsByEmailIgnoreCaseAndUserIdNot(String email, int userId);

@@ -9,6 +9,8 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 
+import java.time.LocalDateTime;
+
 @MappedSuperclass
 public abstract class User {
 
@@ -25,6 +27,12 @@ public abstract class User {
 
     @Column(nullable = true)
     private String password;
+
+    @Column(name = "password_reset_token_hash", length = 128)
+    private String passwordResetTokenHash;
+
+    @Column(name = "password_reset_token_expires_at")
+    private LocalDateTime passwordResetTokenExpiresAt;
 
     protected User() {
     }
@@ -70,6 +78,27 @@ public abstract class User {
 
     public boolean isPasswordSet() {
         return password != null && !password.isBlank();
+    }
+
+    public String getPasswordResetTokenHash() {
+        return passwordResetTokenHash;
+    }
+
+    public void setPasswordResetTokenHash(String passwordResetTokenHash) {
+        this.passwordResetTokenHash = passwordResetTokenHash;
+    }
+
+    public LocalDateTime getPasswordResetTokenExpiresAt() {
+        return passwordResetTokenExpiresAt;
+    }
+
+    public void setPasswordResetTokenExpiresAt(LocalDateTime passwordResetTokenExpiresAt) {
+        this.passwordResetTokenExpiresAt = passwordResetTokenExpiresAt;
+    }
+
+    public void clearPasswordResetToken() {
+        this.passwordResetTokenHash = null;
+        this.passwordResetTokenExpiresAt = null;
     }
 
     public abstract String getWelcomeMessage();
