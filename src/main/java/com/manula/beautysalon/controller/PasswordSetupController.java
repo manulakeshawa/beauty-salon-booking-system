@@ -28,6 +28,8 @@ public class PasswordSetupController {
             @RequestParam(required = false) String token,
             Model model
     ) {
+        // This page must be public because admin-created customers/stylists do not have
+        // passwords yet; the emailed setup token is what proves access to the invitation.
         model.addAttribute("type", type);
         model.addAttribute("token", token);
 
@@ -56,6 +58,8 @@ public class PasswordSetupController {
                 return "redirect:/customers?action=login";
             }
             if ("stylist".equalsIgnoreCase(type)) {
+                // Stylists share the staff login page after setup, while customers return to
+                // the customer login flow.
                 stylistService.setupPassword(token, newPassword, confirmPassword);
                 redirectAttributes.addFlashAttribute("successMessage", "Your password has been set. You can now log in.");
                 return "redirect:/staff-login";

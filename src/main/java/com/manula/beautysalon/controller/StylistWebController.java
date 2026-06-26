@@ -124,6 +124,8 @@ public class StylistWebController {
                     return adminAccessRedirect();
                 }
                 if (name != null && email != null && specialty != null && level != null) {
+                    // Admin-created stylists receive setup links so the salon does not assign
+                    // or store a temporary plain-text password for staff.
                     Stylist stylist = new Stylist(
                             0,
                             name,
@@ -200,6 +202,8 @@ public class StylistWebController {
                     return adminAccessRedirect();
                 }
                 if (userId != null) {
+                    // Availability controls whether a stylist can be selected for new bookings;
+                    // it is separate from active/inactive history preservation.
                     Stylist stylist = stylistService.findById(userId);
                     if (stylist != null) {
                         stylist.setAvailable(available != null && available);

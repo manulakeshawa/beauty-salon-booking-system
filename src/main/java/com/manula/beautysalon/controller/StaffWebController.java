@@ -42,6 +42,8 @@ public class StaffWebController {
     public String showStaffLogin() {
         SalonUserPrincipal principal = securitySessionService.currentPrincipal();
         if (principal != null) {
+            // The staff login page is shared by admins and stylists, but an existing session
+            // should continue to the correct role-specific dashboard.
             if (principal.isAdmin()) {
                 return "redirect:/admin";
             }
@@ -65,6 +67,7 @@ public class StaffWebController {
     ) {
         try {
             SalonUserPrincipal principal = securitySessionService.loginStaff(username, password, request, response);
+            // Managers administer the salon; stylists work from their appointment schedule.
             return principal.isAdmin() ? "redirect:/admin" : "redirect:/stylist-portal";
         } catch (AuthenticationException ex) {
             if (stylistService.isPasswordSetupPending(username)) {
@@ -131,6 +134,8 @@ public class StaffWebController {
         try {
             if ("update-profile".equalsIgnoreCase(action)) {
                 Stylist updated = stylistService.updateStylistProfile(principal.getEmail(), name, email);
+                // Refresh the session principal so schedule ownership and page chrome reflect
+                // the stylist's updated profile immediately.
                 securitySessionService.refreshStylist(updated, request, response);
                 redirectAttributes.addFlashAttribute("successMessage", "Your profile has been successfully updated.");
             } else if ("change-password".equalsIgnoreCase(action)) {
@@ -182,6 +187,8 @@ public class StaffWebController {
         try {
             if ("update-account".equalsIgnoreCase(action)) {
                 Employee updated = staffService.updateAdminAccount(principal.getUsername(), newUsername, email);
+                // Admin username/email changes affect future staff login, so update the current
+                // principal instead of forcing a logout.
                 securitySessionService.refreshAdmin(updated, request, response);
                 redirectAttributes.addFlashAttribute("successMessage", "Your admin account details have been successfully updated.");
             } else {

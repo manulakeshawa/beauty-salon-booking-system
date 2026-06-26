@@ -19,11 +19,14 @@ public class Stylist extends StaffMember {
     private String level;
     private boolean available;
     private String imageFileName;
+    // Inactive stylists are hidden from booking lists while preserved for appointment/review history.
     private Boolean active = true;
 
+    // Admin-created stylists use first-time setup links instead of shared temporary passwords.
     @Column(name = "password_setup_token_hash", length = 128)
     private String passwordSetupTokenHash;
 
+    // The invitation window is limited so stale setup links cannot activate accounts later.
     @Column(name = "password_setup_token_expires_at")
     private LocalDateTime passwordSetupTokenExpiresAt;
 

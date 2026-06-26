@@ -102,6 +102,8 @@ public class ServiceWebController {
 
         SalonService existingService = isNew ? null : salonServiceService.findById(serviceId);
 
+        // Preserve existing media/assignment values when the admin edits only the core service
+        // details, so partial form submissions do not accidentally blank catalog cards.
         String imageToUse;
         if (imageFileName != null && !imageFileName.isBlank()) {
             imageToUse = imageFileName;
@@ -141,6 +143,8 @@ public class ServiceWebController {
     }
 
     private SalonService toService(int serviceId, String type, String name, String description, double basePrice, String imageFileName, String stylistName) {
+        // The form chooses the concrete service subtype; the model layer stores both subtypes
+        // in one table using the discriminator documented on SalonService.
         if ("package".equalsIgnoreCase(type)) {
             return new PackageService(serviceId, name, description, basePrice, imageFileName, stylistName);
         }

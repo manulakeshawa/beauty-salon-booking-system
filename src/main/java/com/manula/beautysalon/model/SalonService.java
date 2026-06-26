@@ -35,7 +35,10 @@ public abstract class SalonService {
 
     private double basePrice;
     private String imageFileName;
+    // Stored as a name because the storefront shows a human assignment and old services may
+    // outlive the stylist account that originally provided them.
     private String stylistName;
+    // Inactive services are hidden from new bookings but retained when history references them.
     private Boolean active = true;
 
     protected SalonService() {

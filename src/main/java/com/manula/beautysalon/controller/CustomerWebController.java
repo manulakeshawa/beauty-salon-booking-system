@@ -65,6 +65,8 @@ public class CustomerWebController {
             case "login":
                 SalonUserPrincipal principal = securitySessionService.currentPrincipal();
                 if (principal != null) {
+                    // Visiting the public login page while already signed in should preserve
+                    // the session and send each account type back to its own workspace.
                     return dashboardRedirectFor(principal);
                 }
                 return "customer-login";
@@ -140,6 +142,8 @@ public class CustomerWebController {
                     return adminAccessRedirect();
                 }
                 if (name != null && email != null && customerType != null) {
+                    // Admin-created customers receive setup links so staff never need to know
+                    // or type a customer's initial password.
                     Customer customer = new Customer(0, name, email, "", customerType);
                     try {
                         PasswordSetupToken setupToken = customerService.saveAdminCreatedCustomer(customer);
@@ -179,6 +183,8 @@ public class CustomerWebController {
                 if (email != null && password != null) {
                     try {
                         securitySessionService.loginCustomer(email, password, request, response);
+                        // Customers land on their portal because bookings, receipts, and reviews
+                        // are customer-specific after authentication.
                         return "redirect:/my-portal";
                     } catch (AuthenticationException ex) {
                         if (customerService.isPasswordSetupPending(email)) {
@@ -315,6 +321,8 @@ public class CustomerWebController {
         try {
             if ("update-profile".equalsIgnoreCase(action)) {
                 Customer updated = customerService.updateCustomerProfile(principal.getEmail(), name, email);
+                // Refresh the principal so navigation and ownership checks use the updated
+                // name/email immediately in the same browser session.
                 securitySessionService.refreshCustomer(updated, request, response);
                 redirectAttributes.addFlashAttribute("successMessage", "Your profile has been successfully updated.");
             } else if ("change-password".equalsIgnoreCase(action)) {
@@ -341,6 +349,8 @@ public class CustomerWebController {
     }
 
     private String dashboardRedirectFor(SalonUserPrincipal principal) {
+        // Each role has a different default workspace and should not be dropped onto a
+        // generic page after already-authenticated navigation.
         if (principal.isCustomer()) {
             return "redirect:/my-portal";
         }

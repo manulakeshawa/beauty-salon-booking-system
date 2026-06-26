@@ -28,9 +28,11 @@ public abstract class User {
     @Column(nullable = true)
     private String password;
 
+    // Forgot-password links are validated by this hash, not by storing the emailed raw token.
     @Column(name = "password_reset_token_hash", length = 128)
     private String passwordResetTokenHash;
 
+    // Reset links are time-limited so old email links cannot be used indefinitely.
     @Column(name = "password_reset_token_expires_at")
     private LocalDateTime passwordResetTokenExpiresAt;
 

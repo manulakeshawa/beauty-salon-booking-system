@@ -20,6 +20,8 @@ public class Appointment {
     @Column(name = "appointment_id")
     private int appointmentId;
 
+    // Appointments keep display names so receipts and history remain readable even after
+    // related profiles or service records are edited.
     @Column(nullable = false)
     private String customerName;
 
@@ -29,6 +31,8 @@ public class Appointment {
     private String stylistName;
     private String appointmentDate;
     private String appointmentTime;
+    // Status drives calendar availability, customer cancellation rules, stylist check-in,
+    // completion, and receipt eligibility.
     private String status;
 
     public Appointment() {

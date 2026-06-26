@@ -33,9 +33,12 @@ public class Review {
     @Lob
     private String comment;
 
+    // Legacy/public ownership marker for reviews; current customer edits are checked against
+    // the logged-in customer's display name in the controller.
     @Column(length = 1000)
     private String ownerToken;
 
+    // Admin moderation flag that controls whether a review is treated as trusted public feedback.
     private boolean verified;
 
     public Review() {

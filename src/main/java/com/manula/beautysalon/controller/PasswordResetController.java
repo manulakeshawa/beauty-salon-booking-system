@@ -20,6 +20,8 @@ public class PasswordResetController {
 
     @GetMapping("/forgot-password")
     public String showForgotPassword() {
+        // Forgot password must be public because the user is here specifically without a
+        // working session or known password.
         return "forgot-password";
     }
 
@@ -30,6 +32,8 @@ public class PasswordResetController {
             RedirectAttributes redirectAttributes
     ) {
         try {
+            // Password reset starts from email because customers, stylists, and admins all
+            // have email addresses, while only admins have usernames.
             passwordResetService.requestPasswordReset(email);
             redirectAttributes.addFlashAttribute("successMessage", PasswordResetService.GENERIC_RESET_REQUEST_MESSAGE);
             return "redirect:/forgot-password";
@@ -45,6 +49,8 @@ public class PasswordResetController {
             @RequestParam(required = false) String token,
             Model model
     ) {
+        // Reset links are public bearer-token pages; requiring login here would block the
+        // recovery flow for users who cannot authenticate yet.
         model.addAttribute("token", token);
         addResetTokenState(token, model);
         return "reset-password";

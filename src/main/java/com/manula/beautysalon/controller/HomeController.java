@@ -58,6 +58,8 @@ public class HomeController {
             return;
         }
 
+        // Logged-in users can still browse the public storefront; the navigation simply offers
+        // a return path to the right dashboard instead of logging them out or hiding the site.
         model.addAttribute("authenticatedUser", true);
         if (principal.isCustomer()) {
             model.addAttribute("dashboardPath", "/my-portal");
@@ -97,6 +99,8 @@ public class HomeController {
             }
         } catch (Exception ignored) {
         }
+        // Keep the public homepage usable on a fresh/demo database before any reviews have
+        // been moderated as verified.
         return fallbackTestimonials();
     }
 

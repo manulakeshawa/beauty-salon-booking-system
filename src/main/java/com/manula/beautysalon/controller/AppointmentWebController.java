@@ -62,6 +62,8 @@ public class AppointmentWebController {
                 if (customerPrincipal == null || !customerPrincipal.isCustomer()) {
                     return "redirect:/customers?action=login";
                 }
+                // Public booking is still customer-owned: the logged-in customer name is used
+                // so users cannot create appointments under another customer's name.
                 String loggedInName = customerPrincipal.getDisplayName();
                 model.addAttribute("customerName", loggedInName);
                 model.addAttribute("generatedAppointmentId", appointmentService.generateNextAppointmentId());
@@ -121,6 +123,8 @@ public class AppointmentWebController {
             return "redirect:/my-portal";
         }
 
+        // Receipts are only for the logged-in customer's completed appointments; inactive
+        // services may still be used here because old appointments need historical pricing.
         double basePrice = 0.0;
         SalonService bookedService = salonServiceService.findByNameIncludingInactive(appt.getServiceName());
         if (bookedService != null) {
@@ -228,6 +232,8 @@ public class AppointmentWebController {
                             LocalTime apptTime = LocalTime.parse(apptToCancel.getAppointmentTime());
                             LocalDateTime apptDateTime = LocalDateTime.of(apptDate, apptTime);
 
+                            // Customer self-cancellation closes 24 hours before the appointment
+                            // to protect the salon schedule.
                             if (LocalDateTime.now().plus(24, ChronoUnit.HOURS).isAfter(apptDateTime)) {
                                 return "redirect:/my-portal?error=late_cancel";
                             }
@@ -248,6 +254,8 @@ public class AppointmentWebController {
                 if (!SecurityUtils.isStaff()) {
                     return "redirect:/staff-login";
                 }
+                // Staff status transitions are separated from admin edit/delete flows because
+                // stylists only need to progress appointments through the service visit.
                 if (appointmentId != null) {
                     Appointment appointment = appointmentService.findById(appointmentId);
                     if (appointment != null) {

@@ -15,9 +15,12 @@ public class Customer extends User {
 
     private String customerType;
 
+    // Admin-created customers do not receive temporary passwords; this stores the hashed
+    // first-time setup token until the customer chooses their own password.
     @Column(name = "password_setup_token_hash", length = 128)
     private String passwordSetupTokenHash;
 
+    // Setup links expire so an unused account invitation cannot remain valid forever.
     @Column(name = "password_setup_token_expires_at")
     private LocalDateTime passwordSetupTokenExpiresAt;
 

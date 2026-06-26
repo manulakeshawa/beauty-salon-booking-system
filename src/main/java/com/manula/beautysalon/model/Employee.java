@@ -14,6 +14,7 @@ public class Employee extends StaffMember {
 
     @Column(nullable = false, unique = true)
     private String username;
+    // MANAGER maps to the ADMIN authority used for back-office routes.
     private String role;
     private String level;
     private String specialty;
