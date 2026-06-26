@@ -106,12 +106,16 @@
                                    class="btn btn-sm btn-outline-secondary border-0 rounded-circle me-1" title="Edit Service">
                                     <i class="bi bi-pencil-square fs-5"></i>
                                 </a>
-                                <a th:href="@{/services(action='delete',serviceId=${service.serviceId})}"
-                                   class="btn btn-sm btn-outline-danger border-0 rounded-circle"
-                                   title="Delete Service"
-                                   onclick="return confirm('Delete this service?');">
-                                    <i class="bi bi-trash3 fs-5"></i>
-                                </a>
+                                <form th:action="@{/services}" method="post" class="d-inline">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="serviceId" th:value="${service.serviceId}">
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-danger border-0 rounded-circle"
+                                            title="Delete Service"
+                                            onclick="return confirm('Delete this service?');">
+                                        <i class="bi bi-trash3 fs-5"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>

@@ -82,9 +82,13 @@
                                 <a th:href="@{/appointments(action='edit', appointmentId=${appt.appointmentId})}" class="btn btn-sm btn-outline-secondary border-0 rounded-circle me-1" title="Edit/Reschedule">
                                     <i class="bi bi-pencil-square fs-5"></i>
                                 </a>
-                                <a th:href="@{/appointments(action='delete', appointmentId=${appt.appointmentId})}" class="btn btn-sm btn-outline-danger border-0 rounded-circle" title="Cancel Appointment" onclick="return confirm('Permanently delete this appointment?');">
-                                    <i class="bi bi-calendar-x fs-5"></i>
-                                </a>
+                                <form th:action="@{/appointments}" method="post" class="d-inline">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="appointmentId" th:value="${appt.appointmentId}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger border-0 rounded-circle" title="Cancel Appointment" onclick="return confirm('Permanently delete this appointment?');">
+                                        <i class="bi bi-calendar-x fs-5"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>

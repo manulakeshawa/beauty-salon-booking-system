@@ -270,9 +270,17 @@ h1, h2, h3, h4, .brand-mark, .logo-text {
     display: inline-block;
 }
 
+.hero-content .btn-lumiere-cta span {
+    color: var(--lumiere-pink) !important;
+}
+
 .btn-lumiere-cta:hover {
     transform: translateY(-5px) scale(1.02);
     box-shadow: 0 15px 35px rgba(217, 165, 179, 0.6) !important;
     background-color: var(--lumiere-pink) !important;
+    color: #ffffff !important;
+}
+
+.hero-content .btn-lumiere-cta:hover span {
     color: #ffffff !important;
 }

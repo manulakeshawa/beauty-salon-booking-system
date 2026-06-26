@@ -1,6 +1,8 @@
 package com.manula.beautysalon.controller;
 
 import com.manula.beautysalon.model.Review;
+import com.manula.beautysalon.security.SalonUserPrincipal;
+import com.manula.beautysalon.security.SecuritySessionService;
 import com.manula.beautysalon.service.ReviewService;
 import com.manula.beautysalon.service.SalonServiceService;
 import com.manula.beautysalon.util.SecurityUtils;
@@ -18,21 +20,22 @@ public class ReviewWebController {
 
     private final ReviewService reviewService;
     private final SalonServiceService salonServiceService;
+    private final SecuritySessionService securitySessionService;
 
-    public ReviewWebController(ReviewService reviewService, SalonServiceService salonServiceService) {
+    public ReviewWebController(ReviewService reviewService, SalonServiceService salonServiceService, SecuritySessionService securitySessionService) {
         this.reviewService = reviewService;
         this.salonServiceService = salonServiceService;
+        this.securitySessionService = securitySessionService;
     }
 
     @GetMapping("/public-review")
     public String showPublicReviewPage(HttpSession session, Model model) {
-        String loggedInName = (String) session.getAttribute("loggedInCustomerName");
-
-        if (loggedInName == null) {
+        SalonUserPrincipal customerPrincipal = securitySessionService.currentPrincipal();
+        if (customerPrincipal == null || !customerPrincipal.isCustomer()) {
             return "redirect:/customers?action=login";
         }
 
-        model.addAttribute("customerName", loggedInName);
+        model.addAttribute("customerName", customerPrincipal.getDisplayName());
         model.addAttribute("services", salonServiceService.readActiveServices());
         return "public-review-form";
     }
@@ -45,19 +48,14 @@ public class ReviewWebController {
             @RequestParam int rating,
             @RequestParam String comment
     ) {
-        String loggedInCustomerName = (String) session.getAttribute("loggedInCustomerName");
-
-        if (loggedInCustomerName == null) {
+        SalonUserPrincipal customerPrincipal = securitySessionService.currentPrincipal();
+        if (customerPrincipal == null || !customerPrincipal.isCustomer()) {
             return "redirect:/customers?action=login";
-        }
-
-        if (session.getAttribute("staffRole") != null && !SecurityUtils.isManager(session)) {
-            return "redirect:/admin?error=unauthorized";
         }
 
         Review review = new Review(
                 0,
-                loggedInCustomerName,
+                customerPrincipal.getDisplayName(),
                 serviceName,
                 stylistName,
                 rating,
@@ -91,41 +89,29 @@ public class ReviewWebController {
             HttpSession session,
             Model model
     ) {
-        if (session.getAttribute("staffRole") == null) {
-            return "redirect:/staff-login";
-        }
-
         model.addAttribute("reviews", reviewService.getFilteredReviews(service, stylist));
         model.addAttribute("service", service == null ? "" : service);
         model.addAttribute("stylist", stylist == null ? "" : stylist);
         return "admin-review-control";
     }
 
-    @GetMapping("/admin/reviews/toggle")
+    @PostMapping("/admin/reviews/toggle")
     public String toggleReviewStatus(@RequestParam Integer id, HttpSession session) {
-        if (session.getAttribute("staffRole") == null) {
-            return "redirect:/staff-login";
-        }
-
         if (!SecurityUtils.isManager(session)) {
-            return "redirect:/admin/reviews?error=unauthorized";
+            return "redirect:/access-denied";
         }
 
         reviewService.toggleReviewVerification(id);
         return "redirect:/admin/reviews";
     }
 
-    @GetMapping("/admin/deleteReview")
+    @PostMapping("/admin/deleteReview")
     public String adminDeleteReview(
             @RequestParam(required = false) Integer id,
             HttpSession session
     ) {
-        if (session.getAttribute("staffRole") == null) {
-            return "redirect:/staff-login";
-        }
-
         if (!SecurityUtils.isManager(session)) {
-            return "redirect:/admin?error=unauthorized";
+            return "redirect:/access-denied";
         }
 
         if (id != null) {
@@ -141,11 +127,11 @@ public class ReviewWebController {
             HttpSession session,
             Model model
     ) {
-        String loggedInCustomer = (String) session.getAttribute("loggedInCustomerName");
-
-        if (loggedInCustomer == null) {
+        SalonUserPrincipal customerPrincipal = securitySessionService.currentPrincipal();
+        if (customerPrincipal == null || !customerPrincipal.isCustomer()) {
             return "redirect:/customers?action=login";
         }
+        String loggedInCustomer = customerPrincipal.getDisplayName();
 
         Review review = reviewService.getReviewById(id);
 
@@ -164,11 +150,11 @@ public class ReviewWebController {
             @RequestParam String comment,
             HttpSession session
     ) {
-        String loggedInCustomer = (String) session.getAttribute("loggedInCustomerName");
-
-        if (loggedInCustomer == null) {
+        SalonUserPrincipal customerPrincipal = securitySessionService.currentPrincipal();
+        if (customerPrincipal == null || !customerPrincipal.isCustomer()) {
             return "redirect:/customers?action=login";
         }
+        String loggedInCustomer = customerPrincipal.getDisplayName();
 
         Review review = reviewService.getReviewById(reviewId);
 
@@ -185,11 +171,11 @@ public class ReviewWebController {
             @RequestParam Integer reviewId,
             HttpSession session
     ) {
-        String loggedInCustomer = (String) session.getAttribute("loggedInCustomerName");
-
-        if (loggedInCustomer == null) {
+        SalonUserPrincipal customerPrincipal = securitySessionService.currentPrincipal();
+        if (customerPrincipal == null || !customerPrincipal.isCustomer()) {
             return "redirect:/customers?action=login";
         }
+        String loggedInCustomer = customerPrincipal.getDisplayName();
 
         Review review = reviewService.getReviewById(reviewId);
 

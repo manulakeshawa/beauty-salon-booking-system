@@ -286,8 +286,8 @@
 </div>
 
 <!-- ── Floating Book Button ─────────────────────────────── -->
-<a href="/customers?action=public-register" id="fabBtn" aria-label="Book appointment">
-    <span class="fab-pulse"></span>Book Now
+<a th:href="${primaryActionPath}" id="fabBtn" aria-label="Book appointment">
+    <span class="fab-pulse"></span><span th:text="${authenticatedUser} ? 'Dashboard' : 'Book Now'">Book Now</span>
 </a>
 
 <!-- ═══════════════════════════════════════════════════════
@@ -310,9 +310,14 @@
                 <li class="nav-item"><a class="nav-link" href="#services"    data-section="services">Services</a></li>
                 <li class="nav-item"><a class="nav-link" href="#specialists" data-section="specialists">Our Team</a></li>
                 <li class="nav-item"><a class="nav-link" href="#reviews"     data-section="reviews">Reviews</a></li>
-                <li class="nav-item ms-lg-3">
+                <li class="nav-item ms-lg-3" th:if="${!authenticatedUser}">
                     <a href="/customers?action=login" class="btn btn-light fw-bold shadow-sm px-4 py-2" style="color:#d8a4b1;border-radius:50px;font-size:.85rem;">
                         <i class="bi bi-person-circle me-2"></i>Client Login
+                    </a>
+                </li>
+                <li class="nav-item ms-lg-3" th:if="${authenticatedUser}">
+                    <a th:href="${dashboardPath}" class="btn btn-light fw-bold shadow-sm px-4 py-2" style="color:#d8a4b1;border-radius:50px;font-size:.85rem;">
+                        <i class="bi bi-speedometer2 me-2"></i><span th:text="${dashboardLabel}">Dashboard</span>
                     </a>
                 </li>
             </ul>
@@ -328,8 +333,8 @@
             <h1 class="hero-animate display-1 fw-bold mb-4" style="line-height:1.05;">Elevate Your<br class="d-none d-md-block"> Elegance</h1>
             <p class="hero-animate lead fw-light mb-5 mx-auto opacity-90" style="max-width:580px;font-size:1.15rem;">Experience Colombo's premier destination for bespoke hair,<br class="d-none d-lg-block"> skin, and nail treatments.</p>
             <div class="hero-animate">
-                <a href="/customers?action=public-register" class="btn btn-lumiere-cta btn-lg text-uppercase">
-                    Book an Appointment <i class="bi bi-calendar-heart ms-2"></i>
+                <a th:href="${primaryActionPath}" class="btn btn-lumiere-cta btn-lg text-uppercase">
+                    <span th:text="${primaryActionLabel}">Book an Appointment</span> <i class="bi bi-calendar-heart ms-2"></i>
                 </a>
             </div>
         </div>
@@ -445,8 +450,8 @@
 
             <div class="col-lg-4 col-md-6 sr"
                  th:each="service, iStat : ${services}"
-                 th:classappend="${iStat.index == 1 ? ' sr-d1' : (iStat.index == 2 ? ' sr-d2' : '')}"
-                 onclick="window.location.href='/customers?action=public-register'">
+                 th:classappend="${iStat.index == 1 ? ' sr-d1' : (iStat.index == 2 ? ' sr-d2' : '')}">
+                <a th:href="${primaryActionPath}" class="text-decoration-none text-reset d-block h-100">
                 <div class="card h-100 service-card shadow-sm" style="border-radius:1.5rem;overflow:hidden;border:1px solid rgba(231,199,210,.4);">
                     <div class="svc-img">
                         <img th:src="@{'/images/' + ${service.imageFileName}}"
@@ -471,6 +476,7 @@
                         </div>
                     </div>
                 </div>
+                </a>
             </div>
         </div>
     </div>
@@ -586,7 +592,8 @@
                     <li class="mb-3"><a href="#services"    class="text-muted text-decoration-none">Our Menu</a></li>
                     <li class="mb-3"><a href="#specialists" class="text-muted text-decoration-none">Master Stylists</a></li>
                     <li class="mb-3"><a href="#reviews"     class="text-muted text-decoration-none">Guest Reviews</a></li>
-                    <li><a th:href="@{/customers(action='login')}" class="text-decoration-none fw-semibold" style="color:var(--lumiere-pink)!important;">Client Login</a></li>
+                    <li th:if="${!authenticatedUser}"><a th:href="@{/customers(action='login')}" class="text-decoration-none fw-semibold" style="color:var(--lumiere-pink)!important;">Client Login</a></li>
+                    <li th:if="${authenticatedUser}"><a th:href="${dashboardPath}" class="text-decoration-none fw-semibold" style="color:var(--lumiere-pink)!important;" th:text="${dashboardLabel}">Dashboard</a></li>
                 </ul>
             </div>
 
@@ -613,8 +620,11 @@
 
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
             <p class="text-muted mb-3 mb-md-0" style="font-size:.78rem;">&copy; 2026 Lumière Salon Management. Crafting Beauty for the Modern Age.</p>
-            <a href="/staff-login" class="text-muted text-decoration-none" style="font-size:.68rem;letter-spacing:2px;text-transform:uppercase;font-weight:700;">
+            <a th:if="${!authenticatedUser}" href="/staff-login" class="text-muted text-decoration-none" style="font-size:.68rem;letter-spacing:2px;text-transform:uppercase;font-weight:700;">
                 <i class="bi bi-shield-lock me-2"></i>Staff Access
+            </a>
+            <a th:if="${authenticatedUser}" th:href="${dashboardPath}" class="text-muted text-decoration-none" style="font-size:.68rem;letter-spacing:2px;text-transform:uppercase;font-weight:700;">
+                <i class="bi bi-speedometer2 me-2"></i>Return to Dashboard
             </a>
         </div>
     </div>

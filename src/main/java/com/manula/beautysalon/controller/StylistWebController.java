@@ -1,6 +1,7 @@
 package com.manula.beautysalon.controller;
 
 import com.manula.beautysalon.model.Stylist;
+import com.manula.beautysalon.security.SecuritySessionService;
 import com.manula.beautysalon.service.DuplicateEmailException;
 import com.manula.beautysalon.service.EmailService;
 import com.manula.beautysalon.service.PasswordSetupEmailResult;
@@ -22,10 +23,12 @@ public class StylistWebController {
 
     private final StylistService stylistService;
     private final EmailService emailService;
+    private final SecuritySessionService securitySessionService;
 
-    public StylistWebController(StylistService stylistService, EmailService emailService) {
+    public StylistWebController(StylistService stylistService, EmailService emailService, SecuritySessionService securitySessionService) {
         this.stylistService = stylistService;
         this.emailService = emailService;
+        this.securitySessionService = securitySessionService;
     }
 
     @GetMapping("/stylists")
@@ -35,22 +38,18 @@ public class StylistWebController {
             HttpSession session,
             Model model
     ) {
-        if (session.getAttribute("staffRole") == null) {
-            return "redirect:/staff-login";
-        }
-
         switch (action.toLowerCase()) {
             case "new":
             case "register":
                 if (!SecurityUtils.isManager(session)) {
-                    return "redirect:/admin?error=unauthorized";
+                    return adminAccessRedirect();
                 }
                 model.addAttribute("generatedUserId", stylistService.generateNextStylistId());
                 return "Stylist-register";
             case "edit":
             case "update":
                 if (!SecurityUtils.isManager(session)) {
-                    return "redirect:/admin?error=unauthorized";
+                    return adminAccessRedirect();
                 }
                 if (userId == null) {
                     return "redirect:/stylists?action=list";
@@ -64,21 +63,21 @@ public class StylistWebController {
             case "manageavailability":
             case "availability":
                 if (!SecurityUtils.isManager(session)) {
-                    return "redirect:/admin?error=unauthorized";
+                    return adminAccessRedirect();
                 }
                 List<Stylist> stylists = stylistService.readAllStylists();
                 model.addAttribute("stylists", stylists);
                 return "stylist-availability";
             case "delete":
                 if (!SecurityUtils.isManager(session)) {
-                    return "redirect:/admin?error=unauthorized";
-                }
-                if (userId != null) {
-                    stylistService.deleteStylist(userId);
+                    return adminAccessRedirect();
                 }
                 return "redirect:/stylists?action=list";
             case "list":
             default:
+                if (!SecurityUtils.isAdmin()) {
+                    return adminAccessRedirect();
+                }
                 model.addAttribute("stylists", stylistService.readAllStylists());
                 return "stylist-list";
         }
@@ -100,20 +99,17 @@ public class StylistWebController {
             HttpSession session,
             RedirectAttributes redirectAttributes
     ) {
-        if (session.getAttribute("staffRole") == null) {
-            return "redirect:/staff-login";
-        }
         if (action == null || action.isBlank()) {
             return "redirect:/stylists?action=list";
         }
 
         switch (action.toLowerCase()) {
             case "change-password":
-                String loggedInEmail = (String) session.getAttribute("staffEmail");
-                if (loggedInEmail == null || !"STYLIST".equalsIgnoreCase((String) session.getAttribute("staffRole"))) {
+                if (!SecurityUtils.isStylist()) {
                     return "redirect:/staff-login";
                 }
                 try {
+                    String loggedInEmail = securitySessionService.currentPrincipal().getEmail();
                     stylistService.changeStylistPassword(loggedInEmail, currentPassword, newPassword, confirmPassword);
                 } catch (IllegalArgumentException ex) {
                     redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
@@ -125,7 +121,7 @@ public class StylistWebController {
             case "new":
             case "register":
                 if (!SecurityUtils.isManager(session)) {
-                    return "redirect:/admin?error=unauthorized";
+                    return adminAccessRedirect();
                 }
                 if (name != null && email != null && specialty != null && level != null) {
                     Stylist stylist = new Stylist(
@@ -161,7 +157,7 @@ public class StylistWebController {
             case "edit":
             case "update":
                 if (!SecurityUtils.isManager(session)) {
-                    return "redirect:/admin?error=unauthorized";
+                    return adminAccessRedirect();
                 }
                 if (userId != null) {
                     Stylist existing = stylistService.findById(userId);
@@ -191,9 +187,17 @@ public class StylistWebController {
                     }
                 }
                 break;
+            case "delete":
+                if (!SecurityUtils.isManager(session)) {
+                    return adminAccessRedirect();
+                }
+                if (userId != null) {
+                    stylistService.deleteStylist(userId);
+                }
+                break;
             case "availability":
                 if (!SecurityUtils.isManager(session)) {
-                    return "redirect:/admin?error=unauthorized";
+                    return adminAccessRedirect();
                 }
                 if (userId != null) {
                     Stylist stylist = stylistService.findById(userId);
@@ -210,7 +214,7 @@ public class StylistWebController {
                 return "redirect:/stylists?action=availability";
             case "regenerate-password-setup":
                 if (!SecurityUtils.isManager(session)) {
-                    return "redirect:/admin?error=unauthorized";
+                    return adminAccessRedirect();
                 }
                 if (userId != null) {
                     Stylist stylist = stylistService.findById(userId);
@@ -246,5 +250,9 @@ public class StylistWebController {
         } else {
             redirectAttributes.addFlashAttribute("warningMessage", warningMessage);
         }
+    }
+
+    private String adminAccessRedirect() {
+        return SecurityUtils.isAuthenticated() ? "redirect:/access-denied" : "redirect:/staff-login";
     }
 }

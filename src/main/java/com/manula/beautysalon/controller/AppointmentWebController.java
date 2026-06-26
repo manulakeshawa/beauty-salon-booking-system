@@ -2,6 +2,8 @@ package com.manula.beautysalon.controller;
 
 import com.manula.beautysalon.model.Appointment;
 import com.manula.beautysalon.model.SalonService;
+import com.manula.beautysalon.security.SalonUserPrincipal;
+import com.manula.beautysalon.security.SecuritySessionService;
 import com.manula.beautysalon.service.AppointmentService;
 import com.manula.beautysalon.service.SalonServiceService;
 import com.manula.beautysalon.service.StylistService;
@@ -25,11 +27,13 @@ public class AppointmentWebController {
     private final AppointmentService appointmentService;
     private final SalonServiceService salonServiceService;
     private final StylistService stylistService;
+    private final SecuritySessionService securitySessionService;
 
-    public AppointmentWebController(AppointmentService appointmentService, SalonServiceService salonServiceService, StylistService stylistService) {
+    public AppointmentWebController(AppointmentService appointmentService, SalonServiceService salonServiceService, StylistService stylistService, SecuritySessionService securitySessionService) {
         this.appointmentService = appointmentService;
         this.salonServiceService = salonServiceService;
         this.stylistService = stylistService;
+        this.securitySessionService = securitySessionService;
     }
 
     @GetMapping("/appointments")
@@ -40,14 +44,10 @@ public class AppointmentWebController {
             HttpSession session,
             Model model
     ) {
-        if (!"public-book".equalsIgnoreCase(action) && session.getAttribute("staffRole") == null) {
-            return "redirect:/staff-login";
-        }
-
         switch (action.toLowerCase()) {
             case "new":
                 if (!SecurityUtils.isManager(session)) {
-                    return "redirect:/admin?error=unauthorized";
+                    return adminAccessRedirect();
                 }
                 model.addAttribute("generatedAppointmentId", appointmentService.generateNextAppointmentId());
                 model.addAttribute("services", salonServiceService.readActiveServices());
@@ -58,10 +58,11 @@ public class AppointmentWebController {
                 return "book-appointment";
 
             case "public-book":
-                String loggedInName = (String) session.getAttribute("loggedInCustomerName");
-                if (loggedInName == null) {
+                SalonUserPrincipal customerPrincipal = securitySessionService.currentPrincipal();
+                if (customerPrincipal == null || !customerPrincipal.isCustomer()) {
                     return "redirect:/customers?action=login";
                 }
+                String loggedInName = customerPrincipal.getDisplayName();
                 model.addAttribute("customerName", loggedInName);
                 model.addAttribute("generatedAppointmentId", appointmentService.generateNextAppointmentId());
                 model.addAttribute("services", salonServiceService.readActiveServices());
@@ -73,7 +74,7 @@ public class AppointmentWebController {
 
             case "edit":
                 if (!SecurityUtils.isManager(session)) {
-                    return "redirect:/admin?error=unauthorized";
+                    return adminAccessRedirect();
                 }
                 if (appointmentId == null) {
                     return "redirect:/appointments?action=list";
@@ -92,15 +93,15 @@ public class AppointmentWebController {
 
             case "delete":
                 if (!SecurityUtils.isManager(session)) {
-                    return "redirect:/admin?error=unauthorized";
-                }
-                if (appointmentId != null) {
-                    appointmentService.deleteAppointment(appointmentId);
+                    return adminAccessRedirect();
                 }
                 return "redirect:/appointments?action=list";
 
             case "list":
             default:
+                if (!SecurityUtils.isAdmin()) {
+                    return adminAccessRedirect();
+                }
                 List<Appointment> appointments = appointmentService.readAllAppointments();
                 model.addAttribute("appointments", appointments);
                 return "appointment-list";
@@ -109,10 +110,11 @@ public class AppointmentWebController {
 
     @GetMapping("/receipt")
     public String showReceipt(@RequestParam int appointmentId, HttpSession session, Model model) {
-        String loggedInCustomer = (String) session.getAttribute("loggedInCustomerName");
-        if (loggedInCustomer == null) {
+        SalonUserPrincipal customerPrincipal = securitySessionService.currentPrincipal();
+        if (customerPrincipal == null || !customerPrincipal.isCustomer()) {
             return "redirect:/customers?action=login";
         }
+        String loggedInCustomer = customerPrincipal.getDisplayName();
 
         Appointment appt = appointmentService.findById(appointmentId);
         if (appt == null || !appt.getCustomerName().equalsIgnoreCase(loggedInCustomer) || !"Completed".equalsIgnoreCase(appt.getStatus())) {
@@ -172,10 +174,6 @@ public class AppointmentWebController {
             @RequestParam(required = false) String status,
             HttpSession session
     ) {
-        if (!"public-book".equalsIgnoreCase(action) && !"public-cancel".equalsIgnoreCase(action) && session.getAttribute("staffRole") == null) {
-            return "redirect:/staff-login";
-        }
-
         if (action == null || action.isBlank()) {
             return "redirect:/appointments?action=list";
         }
@@ -183,7 +181,7 @@ public class AppointmentWebController {
         switch (action.toLowerCase()) {
             case "new":
                 if (!SecurityUtils.isManager(session)) {
-                    return "redirect:/admin?error=unauthorized";
+                    return adminAccessRedirect();
                 }
                 if (customerName != null && serviceName != null && appointmentDate != null && appointmentTime != null) {
                     String finalStylist = stylistName != null ? stylistName : "Unassigned";
@@ -200,6 +198,9 @@ public class AppointmentWebController {
                 break;
 
             case "public-book":
+                if (!SecurityUtils.isCustomer()) {
+                    return "redirect:/customers?action=login";
+                }
                 if (customerName != null && serviceName != null && appointmentDate != null && appointmentTime != null) {
                     String finalStylist = stylistName != null ? stylistName : "Unassigned";
 
@@ -216,7 +217,7 @@ public class AppointmentWebController {
                 break;
 
             case "public-cancel":
-                if (session.getAttribute("loggedInCustomerName") == null) {
+                if (!SecurityUtils.isCustomer()) {
                     return "redirect:/customers?action=login";
                 }
                 if (appointmentId != null) {
@@ -244,7 +245,7 @@ public class AppointmentWebController {
 
             case "stylist-checkin":
             case "stylist-complete":
-                if (session.getAttribute("staffRole") == null) {
+                if (!SecurityUtils.isStaff()) {
                     return "redirect:/staff-login";
                 }
                 if (appointmentId != null) {
@@ -260,9 +261,18 @@ public class AppointmentWebController {
                 }
                 return "redirect:/stylist-portal";
 
+            case "delete":
+                if (!SecurityUtils.isManager(session)) {
+                    return adminAccessRedirect();
+                }
+                if (appointmentId != null) {
+                    appointmentService.deleteAppointment(appointmentId);
+                }
+                break;
+
             case "update":
                 if (!SecurityUtils.isManager(session)) {
-                    return "redirect:/admin?error=unauthorized";
+                    return adminAccessRedirect();
                 }
                 if (appointmentId != null) {
                     Appointment existing = appointmentService.findById(appointmentId);
@@ -299,5 +309,9 @@ public class AppointmentWebController {
         }
 
         return "redirect:/appointments?action=list";
+    }
+
+    private String adminAccessRedirect() {
+        return SecurityUtils.isAuthenticated() ? "redirect:/access-denied" : "redirect:/staff-login";
     }
 }

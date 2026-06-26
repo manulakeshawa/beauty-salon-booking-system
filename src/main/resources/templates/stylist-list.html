@@ -137,11 +137,15 @@
                                    class="btn btn-sm btn-outline-secondary border-0 rounded-circle me-1">
                                     <i class="bi bi-pencil-square fs-5"></i>
                                 </a>
-                                <a th:href="@{/stylists(action='delete', userId=${stylist.userId})}"
-                                   class="btn btn-sm btn-outline-danger border-0 rounded-circle"
-                                   onclick="return confirm('Remove this stylist from the team?');">
-                                    <i class="bi bi-person-x fs-5"></i>
-                                </a>
+                                <form th:action="@{/stylists}" method="post" class="d-inline">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="userId" th:value="${stylist.userId}">
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-danger border-0 rounded-circle"
+                                            onclick="return confirm('Remove this stylist from the team?');">
+                                        <i class="bi bi-person-x fs-5"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>

@@ -10,7 +10,13 @@ import com.manula.beautysalon.service.EmailService;
 import com.manula.beautysalon.service.PasswordSetupEmailResult;
 import com.manula.beautysalon.service.PasswordSetupToken;
 import com.manula.beautysalon.service.ReviewService;
+import com.manula.beautysalon.security.SalonUserPrincipal;
+import com.manula.beautysalon.security.SecuritySessionService;
+import com.manula.beautysalon.util.SecurityUtils;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,12 +33,14 @@ public class CustomerWebController {
     private final AppointmentService appointmentService;
     private final ReviewService reviewService;
     private final EmailService emailService;
+    private final SecuritySessionService securitySessionService;
 
-    public CustomerWebController(CustomerService customerService, AppointmentService appointmentService, ReviewService reviewService, EmailService emailService) {
+    public CustomerWebController(CustomerService customerService, AppointmentService appointmentService, ReviewService reviewService, EmailService emailService, SecuritySessionService securitySessionService) {
         this.customerService = customerService;
         this.appointmentService = appointmentService;
         this.reviewService = reviewService;
         this.emailService = emailService;
+        this.securitySessionService = securitySessionService;
     }
 
     @GetMapping("/customers")
@@ -42,18 +50,10 @@ public class CustomerWebController {
             HttpSession session,
             Model model
     ) {
-        if (!"public-register".equalsIgnoreCase(action)
-                && !"login".equalsIgnoreCase(action)
-                && session.getAttribute("staffRole") == null) {
-            return "redirect:/staff-login";
-        }
-
-        String role = (String) session.getAttribute("staffRole");
-
         switch (action.toLowerCase()) {
             case "register":
-                if (!"MANAGER".equals(role)) {
-                    return "redirect:/admin?error=unauthorized";
+                if (!SecurityUtils.isAdmin()) {
+                    return adminAccessRedirect();
                 }
                 model.addAttribute("generatedUserId", customerService.generateNextCustomerId());
                 return "customer-register";
@@ -63,12 +63,16 @@ public class CustomerWebController {
                 return "public-register";
 
             case "login":
+                SalonUserPrincipal principal = securitySessionService.currentPrincipal();
+                if (principal != null) {
+                    return dashboardRedirectFor(principal);
+                }
                 return "customer-login";
 
             case "edit":
             case "update":
-                if (!"MANAGER".equals(role)) {
-                    return "redirect:/admin?error=unauthorized";
+                if (!SecurityUtils.isAdmin()) {
+                    return adminAccessRedirect();
                 }
                 if (userId != null) {
                     Customer existing = customerService.findById(userId);
@@ -80,16 +84,16 @@ public class CustomerWebController {
                 return "redirect:/customers?action=list";
 
             case "delete":
-                if (!"MANAGER".equals(role)) {
-                    return "redirect:/admin?error=unauthorized";
-                }
-                if (userId != null) {
-                    customerService.deleteCustomer(userId);
+                if (!SecurityUtils.isAdmin()) {
+                    return adminAccessRedirect();
                 }
                 return "redirect:/customers?action=list";
 
             case "list":
             default:
+                if (!SecurityUtils.isAdmin()) {
+                    return adminAccessRedirect();
+                }
                 List<Customer> customers = customerService.readAllCustomers();
                 model.addAttribute("customers", customers);
                 return "customer-list";
@@ -108,29 +112,22 @@ public class CustomerWebController {
             @RequestParam(required = false) String confirmPassword,
             @RequestParam(required = false) String customerType,
             HttpSession session,
+            HttpServletRequest request,
+            HttpServletResponse response,
             RedirectAttributes redirectAttributes
     ) {
-        if (!"public-register".equalsIgnoreCase(action)
-                && !"login".equalsIgnoreCase(action)
-                && !"change-password".equalsIgnoreCase(action)
-                && session.getAttribute("staffRole") == null) {
-            return "redirect:/staff-login";
-        }
-
-        String role = (String) session.getAttribute("staffRole");
-
         if (action == null || action.isBlank()) {
             return "redirect:/customers?action=list";
         }
 
         switch (action.toLowerCase()) {
             case "change-password":
-                String loggedInEmail = (String) session.getAttribute("loggedInCustomerEmail");
-                if (loggedInEmail == null) {
+                SalonUserPrincipal customerPrincipal = securitySessionService.currentPrincipal();
+                if (customerPrincipal == null || !customerPrincipal.isCustomer()) {
                     return "redirect:/customers?action=login";
                 }
                 try {
-                    customerService.changeCustomerPassword(loggedInEmail, currentPassword, newPassword, confirmPassword);
+                    customerService.changeCustomerPassword(customerPrincipal.getEmail(), currentPassword, newPassword, confirmPassword);
                 } catch (IllegalArgumentException ex) {
                     redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
                     return "redirect:/customer-profile";
@@ -139,8 +136,8 @@ public class CustomerWebController {
                 return "redirect:/customer-profile";
 
             case "register":
-                if (!"MANAGER".equals(role)) {
-                    return "redirect:/admin?error=unauthorized";
+                if (!SecurityUtils.isAdmin()) {
+                    return adminAccessRedirect();
                 }
                 if (name != null && email != null && customerType != null) {
                     Customer customer = new Customer(0, name, email, "", customerType);
@@ -180,23 +177,22 @@ public class CustomerWebController {
 
             case "login":
                 if (email != null && password != null) {
-                    if (customerService.isPasswordSetupPending(email)) {
-                        redirectAttributes.addFlashAttribute("errorMessage", CustomerService.PASSWORD_SETUP_PENDING_LOGIN_MESSAGE);
-                        return "redirect:/customers?action=login";
-                    }
-                    Customer authenticated = customerService.authenticateCustomer(email, password);
-                    if (authenticated != null) {
-                        session.setAttribute("loggedInCustomerEmail", authenticated.getEmail());
-                        session.setAttribute("loggedInCustomerName", authenticated.getName());
+                    try {
+                        securitySessionService.loginCustomer(email, password, request, response);
                         return "redirect:/my-portal";
+                    } catch (AuthenticationException ex) {
+                        if (customerService.isPasswordSetupPending(email)) {
+                            redirectAttributes.addFlashAttribute("errorMessage", CustomerService.PASSWORD_SETUP_PENDING_LOGIN_MESSAGE);
+                            return "redirect:/customers?action=login";
+                        }
                     }
                 }
                 return "redirect:/customers?action=login&error=1";
 
             case "edit":
             case "update":
-                if (!"MANAGER".equals(role)) {
-                    return "redirect:/admin?error=unauthorized";
+                if (!SecurityUtils.isAdmin()) {
+                    return adminAccessRedirect();
                 }
                 if (userId != null) {
                     Customer existing = customerService.findById(userId);
@@ -222,9 +218,17 @@ public class CustomerWebController {
                     }
                 }
                 break;
+            case "delete":
+                if (!SecurityUtils.isAdmin()) {
+                    return adminAccessRedirect();
+                }
+                if (userId != null) {
+                    customerService.deleteCustomer(userId);
+                }
+                break;
             case "regenerate-password-setup":
-                if (!"MANAGER".equals(role)) {
-                    return "redirect:/admin?error=unauthorized";
+                if (!SecurityUtils.isAdmin()) {
+                    return adminAccessRedirect();
                 }
                 if (userId != null) {
                     Customer customer = customerService.findById(userId);
@@ -256,13 +260,12 @@ public class CustomerWebController {
 
     @GetMapping("/my-portal")
     public String showCustomerPortal(HttpSession session, Model model) {
-        String userEmail = (String) session.getAttribute("loggedInCustomerEmail");
-        String userName = (String) session.getAttribute("loggedInCustomerName");
-
-        if (userEmail == null) {
+        SalonUserPrincipal principal = securitySessionService.currentPrincipal();
+        if (principal == null || !principal.isCustomer()) {
             return "redirect:/customers?action=login";
         }
 
+        String userName = principal.getDisplayName();
         model.addAttribute("userName", userName);
 
         List<Appointment> myAppointments = appointmentService.findByCustomerName(userName);
@@ -276,12 +279,12 @@ public class CustomerWebController {
 
     @GetMapping("/customer-profile")
     public String showCustomerProfile(HttpSession session, Model model) {
-        String userEmail = (String) session.getAttribute("loggedInCustomerEmail");
-        if (userEmail == null) {
+        SalonUserPrincipal principal = securitySessionService.currentPrincipal();
+        if (principal == null || !principal.isCustomer()) {
             return "redirect:/customers?action=login";
         }
 
-        Customer customer = customerService.findByEmail(userEmail);
+        Customer customer = customerService.findByEmail(principal.getEmail());
         if (customer == null) {
             session.invalidate();
             return "redirect:/customers?action=login";
@@ -300,21 +303,22 @@ public class CustomerWebController {
             @RequestParam(required = false) String newPassword,
             @RequestParam(required = false) String confirmPassword,
             HttpSession session,
+            HttpServletRequest request,
+            HttpServletResponse response,
             RedirectAttributes redirectAttributes
     ) {
-        String userEmail = (String) session.getAttribute("loggedInCustomerEmail");
-        if (userEmail == null) {
+        SalonUserPrincipal principal = securitySessionService.currentPrincipal();
+        if (principal == null || !principal.isCustomer()) {
             return "redirect:/customers?action=login";
         }
 
         try {
             if ("update-profile".equalsIgnoreCase(action)) {
-                Customer updated = customerService.updateCustomerProfile(userEmail, name, email);
-                session.setAttribute("loggedInCustomerEmail", updated.getEmail());
-                session.setAttribute("loggedInCustomerName", updated.getName());
+                Customer updated = customerService.updateCustomerProfile(principal.getEmail(), name, email);
+                securitySessionService.refreshCustomer(updated, request, response);
                 redirectAttributes.addFlashAttribute("successMessage", "Your profile has been successfully updated.");
             } else if ("change-password".equalsIgnoreCase(action)) {
-                customerService.changeCustomerPassword(userEmail, currentPassword, newPassword, confirmPassword);
+                customerService.changeCustomerPassword(principal.getEmail(), currentPassword, newPassword, confirmPassword);
                 redirectAttributes.addFlashAttribute("successMessage", "Your password has been successfully updated.");
             }
         } catch (DuplicateEmailException | IllegalArgumentException ex) {
@@ -324,17 +328,28 @@ public class CustomerWebController {
         return "redirect:/customer-profile";
     }
 
-    @GetMapping("/logout")
-    public String logout(HttpSession session) {
-        session.invalidate();
-        return "redirect:/customers?action=login";
-    }
-
     private void addEmailDeliveryFlash(RedirectAttributes redirectAttributes, PasswordSetupEmailResult emailResult, String successMessage, String warningMessage) {
         if (emailResult.emailSent()) {
             redirectAttributes.addFlashAttribute("successMessage", successMessage);
         } else {
             redirectAttributes.addFlashAttribute("warningMessage", warningMessage);
         }
+    }
+
+    private String adminAccessRedirect() {
+        return SecurityUtils.isAuthenticated() ? "redirect:/access-denied" : "redirect:/staff-login";
+    }
+
+    private String dashboardRedirectFor(SalonUserPrincipal principal) {
+        if (principal.isCustomer()) {
+            return "redirect:/my-portal";
+        }
+        if (principal.isStylist()) {
+            return "redirect:/stylist-portal";
+        }
+        if (principal.isAdmin()) {
+            return "redirect:/admin";
+        }
+        return "redirect:/";
     }
 }

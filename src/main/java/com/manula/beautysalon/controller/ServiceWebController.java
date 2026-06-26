@@ -33,21 +33,17 @@ public class ServiceWebController {
             HttpSession session,
             Model model
     ) {
-        if (session.getAttribute("staffRole") == null) {
-            return "redirect:/staff-login";
-        }
-
         switch (action.toLowerCase()) {
             case "new":
                 if (!SecurityUtils.isManager(session)) {
-                    return "redirect:/admin?error=unauthorized";
+                    return adminAccessRedirect();
                 }
                 model.addAttribute("generatedServiceId", salonServiceService.generateNextServiceId());
                 model.addAttribute("stylists", stylistService.readActiveAvailableStylists());
                 return "AddService";
             case "edit":
                 if (!SecurityUtils.isManager(session)) {
-                    return "redirect:/admin?error=unauthorized";
+                    return adminAccessRedirect();
                 }
                 if (serviceId == null) {
                     return "redirect:/services?action=list";
@@ -62,14 +58,14 @@ public class ServiceWebController {
                 return "EditService";
             case "delete":
                 if (!SecurityUtils.isManager(session)) {
-                    return "redirect:/admin?error=unauthorized";
-                }
-                if (serviceId != null) {
-                    salonServiceService.deleteService(serviceId);
+                    return adminAccessRedirect();
                 }
                 return "redirect:/services?action=list";
             case "list":
             default:
+                if (!SecurityUtils.isAdmin()) {
+                    return adminAccessRedirect();
+                }
                 List<SalonService> services = salonServiceService.readAllServices();
                 model.addAttribute("services", services);
                 return "ServiceList";
@@ -88,11 +84,15 @@ public class ServiceWebController {
             @RequestParam(required = false) String stylistName,
             HttpSession session
     ) {
-        if (session.getAttribute("staffRole") == null) {
-            return "redirect:/staff-login";
-        }
         if (!SecurityUtils.isManager(session)) {
-            return "redirect:/admin?error=unauthorized";
+            return adminAccessRedirect();
+        }
+
+        if ("delete".equalsIgnoreCase(action)) {
+            if (serviceId != null && serviceId > 0) {
+                salonServiceService.deleteService(serviceId);
+            }
+            return "redirect:/services?action=list";
         }
 
         boolean isNew = "new".equalsIgnoreCase(action) || serviceId == null || serviceId == 0;
@@ -134,6 +134,10 @@ public class ServiceWebController {
         }
 
         return "redirect:/services?action=list";
+    }
+
+    private String adminAccessRedirect() {
+        return SecurityUtils.isAuthenticated() ? "redirect:/access-denied" : "redirect:/staff-login";
     }
 
     private SalonService toService(int serviceId, String type, String name, String description, double basePrice, String imageFileName, String stylistName) {

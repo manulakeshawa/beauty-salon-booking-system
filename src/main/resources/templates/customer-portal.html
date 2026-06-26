@@ -75,10 +75,15 @@
         </a>
         <div class="d-flex align-items-center">
             <span class="text-muted me-3 d-none d-md-inline small">Welcome, <strong th:text="${userName}">User</strong></span>
+            <a th:href="@{/}" class="btn btn-lumiere-outline btn-sm rounded-pill px-3 fw-bold me-2">
+                <i class="bi bi-house-door"></i> <span class="d-none d-sm-inline">Main Site</span>
+            </a>
             <a th:href="@{/customer-profile}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold me-2">
                 <i class="bi bi-person-gear"></i> <span class="d-none d-sm-inline">Profile</span>
             </a>
-            <a href="/logout" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold">Sign Out</a>
+            <form th:action="@{/logout}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold">Sign Out</button>
+            </form>
         </div>
     </div>
 </nav>

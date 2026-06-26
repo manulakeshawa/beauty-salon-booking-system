@@ -3,10 +3,11 @@ package com.manula.beautysalon.controller;
 import com.manula.beautysalon.model.Review;
 import com.manula.beautysalon.model.SalonService;
 import com.manula.beautysalon.model.Stylist;
+import com.manula.beautysalon.security.SalonUserPrincipal;
+import com.manula.beautysalon.security.SecuritySessionService;
 import com.manula.beautysalon.service.ReviewService;
 import com.manula.beautysalon.service.SalonServiceService;
 import com.manula.beautysalon.service.StylistService;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,11 +21,13 @@ public class HomeController {
     private final SalonServiceService salonServiceService;
     private final ReviewService reviewService;
     private final StylistService stylistService;
+    private final SecuritySessionService securitySessionService;
 
-    public HomeController(SalonServiceService salonServiceService, ReviewService reviewService, StylistService stylistService) {
+    public HomeController(SalonServiceService salonServiceService, ReviewService reviewService, StylistService stylistService, SecuritySessionService securitySessionService) {
         this.salonServiceService = salonServiceService;
         this.reviewService = reviewService;
         this.stylistService = stylistService;
+        this.securitySessionService = securitySessionService;
     }
 
     @GetMapping("/")
@@ -32,15 +35,50 @@ public class HomeController {
         model.addAttribute("services", loadServices());
         model.addAttribute("reviews", loadStorefrontReviews());
         model.addAttribute("stylists", loadStylists());
+        addAuthenticatedNavigation(model);
         return "index";
     }
 
     @GetMapping("/admin")
-    public String showAdminDashboard(HttpSession session) {
-        if (session.getAttribute("staffRole") == null) {
-            return "redirect:/staff-login";
-        }
+    public String showAdminDashboard() {
         return "admin-dashboard";
+    }
+
+    @GetMapping("/access-denied")
+    public String showAccessDenied() {
+        return "access-denied";
+    }
+
+    private void addAuthenticatedNavigation(Model model) {
+        SalonUserPrincipal principal = securitySessionService.currentPrincipal();
+        if (principal == null) {
+            model.addAttribute("authenticatedUser", false);
+            model.addAttribute("primaryActionPath", "/customers?action=public-register");
+            model.addAttribute("primaryActionLabel", "Book an Appointment");
+            return;
+        }
+
+        model.addAttribute("authenticatedUser", true);
+        if (principal.isCustomer()) {
+            model.addAttribute("dashboardPath", "/my-portal");
+            model.addAttribute("dashboardLabel", "Customer Portal");
+            model.addAttribute("primaryActionPath", "/my-portal");
+            model.addAttribute("primaryActionLabel", "Return to Customer Portal");
+            return;
+        }
+        if (principal.isStylist()) {
+            model.addAttribute("dashboardPath", "/stylist-portal");
+            model.addAttribute("dashboardLabel", "Stylist Portal");
+            model.addAttribute("primaryActionPath", "/stylist-portal");
+            model.addAttribute("primaryActionLabel", "Return to Stylist Portal");
+            return;
+        }
+        if (principal.isAdmin()) {
+            model.addAttribute("dashboardPath", "/admin");
+            model.addAttribute("dashboardLabel", "Admin Dashboard");
+            model.addAttribute("primaryActionPath", "/admin");
+            model.addAttribute("primaryActionLabel", "Return to Admin Dashboard");
+        }
     }
 
     private List<SalonService> loadServices() {
