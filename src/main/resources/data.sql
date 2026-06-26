@@ -1,8 +1,11 @@
--- Demo seed data for MySQL/JPA storage.
+-- Demo seed data for fresh/local/demo MySQL setup. This file is not the live
+-- database, and editing or deleting records directly in MySQL does not update it.
 -- SeedDataInitializer runs this file only when the database has no app data
--- and the demo-data seed marker has not been recorded.
+-- and the demo-data seed marker has not been recorded, so deleted live records
+-- are not automatically recreated on every restart.
 -- Each insert is still guarded by a natural key check and INSERT IGNORE.
--- Account passwords are stored as PBKDF2 hashes. Demo test credentials:
+-- Password values below are PBKDF2-hashed demo passwords, not plain text.
+-- Demo-only test credentials:
 -- Customers: amaya.f@email.com/amaya123, dineth.p@email.com/dineth678,
 -- kavindi.s@email.com/kavindi@234, roshan.j@email.com/roshan_3d,
 -- nethmi.dk@email.com/$nethmi45, hpvictus753@gmail.com/@Su12red3,
@@ -13,6 +16,8 @@
 -- Staff/admin: admin or admin@lumieresalon.lk/lumiere2026.
 -- Stylists: Nalika/#nalika@lume, Kasun/#kasun@lume, Kamindu/#kamindu@lume,
 -- Shenali/#shenali@lume, Dinithi/#dinithi@lume, Ruwan/#ruwan@lume, Zara/#zara@lume.
+-- Never store real database passwords, email app passwords, reset/setup tokens,
+-- or other private credentials in data.sql.
 
 SET NAMES utf8mb4;
 

@@ -24,6 +24,8 @@ public class EmailService {
     private final String appBaseUrl;
     private final String fromAddress;
 
+    // SMTP credentials are configured through Spring properties/environment variables for
+    // JavaMailSender. Do not hardcode real email passwords or app passwords in source files.
     public EmailService(
             JavaMailSender mailSender,
             @Value("${app.base-url:http://localhost:8080}") String appBaseUrl,
@@ -77,6 +79,8 @@ public class EmailService {
     }
 
     private String buildPasswordSetupLink(String accountType, String rawToken) {
+        // This URL carries the only copy of the raw setup token. Avoid writing the returned
+        // link to admin pages or logs because anyone with it can set the account password.
         return UriComponentsBuilder.fromUriString(normalizedBaseUrl())
                 .path("/password-setup")
                 .queryParam("type", accountType.toLowerCase(Locale.ROOT))
@@ -85,6 +89,8 @@ public class EmailService {
     }
 
     private String buildPasswordResetLink(String rawToken) {
+        // This URL carries the only copy of the raw reset token. It is intentionally sent by
+        // email and validated by hash when the reset page is opened.
         return UriComponentsBuilder.fromUriString(normalizedBaseUrl())
                 .path("/reset-password")
                 .queryParam("token", rawToken)

@@ -55,6 +55,8 @@ public class CustomerService {
         customer.setUserId(0);
         validateProfile(customer.getName(), customer.getEmail());
         customer.setEmail(accountEmailService.normalize(customer.getEmail()));
+        // Admin-created accounts start without a password; the customer must set one through
+        // the emailed setup link before they can log in.
         customer.setPassword("");
         accountEmailService.assertCustomerEmailAvailable(customer.getEmail(), customer.getUserId());
         PasswordSetupToken token = assignPasswordSetupToken(customer);
@@ -236,6 +238,8 @@ public class CustomerService {
 
     private PasswordSetupToken assignPasswordSetupToken(Customer customer) {
         PasswordSetupToken token = passwordSetupTokenService.generateToken();
+        // Persist the hash and expiry, not the raw setup token. The raw token belongs only in
+        // the email link and is invalidated when setupPassword clears it after use.
         customer.setPasswordSetupTokenHash(passwordSetupTokenService.hashToken(token.rawToken()));
         customer.setPasswordSetupTokenExpiresAt(token.expiresAt());
         return token;

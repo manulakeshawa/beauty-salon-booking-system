@@ -36,6 +36,8 @@ public class SalonUserPrincipal implements UserDetails {
         this.email = email;
         this.displayName = displayName;
         this.password = password;
+        // Spring Security expects ROLE_ authorities; SecurityConfig maps routes to these
+        // three account types instead of sharing one broad staff/customer permission.
         this.authorities = List.of(new SimpleGrantedAuthority("ROLE_" + accountType.name()));
         this.enabled = enabled;
     }

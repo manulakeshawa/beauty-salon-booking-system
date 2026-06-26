@@ -38,12 +38,17 @@ public class SecurityConfig {
         http
                 .authenticationProvider(authenticationProvider)
                 .authorizeHttpRequests(authorize -> authorize
+                        // Login, registration, password setup/reset, and static files must be reachable
+                        // before a user has a session. The setup/reset pages are bearer-token flows, so
+                        // protecting them with role checks would prevent users from using emailed links.
                         .requestMatchers(staticResources()).permitAll()
                         .requestMatchers("/", "/reviews", "/forgot-password", "/reset-password", "/password-setup").permitAll()
                         .requestMatchers(HttpMethod.GET, "/staff-login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/staff-login").permitAll()
                         .requestMatchers(customerPublicActions()).permitAll()
                         .requestMatchers("/access-denied").authenticated()
+                        // CUSTOMER, STYLIST, and ADMIN are separate authorities because each portal
+                        // exposes different account data and operations.
                         .requestMatchers(customerActions()).hasRole("CUSTOMER")
                         .requestMatchers(
                                 "/my-portal",
@@ -55,6 +60,8 @@ public class SecurityConfig {
                                 "/deleteReview",
                                 "/receipt"
                         ).hasRole("CUSTOMER")
+                        // Staff appointment actions can be performed by the assigned stylist workflow
+                        // or by an administrator overseeing salon operations.
                         .requestMatchers(stylistAppointmentActions()).hasAnyRole("STYLIST", "ADMIN")
                         .requestMatchers("/stylist-portal", "/stylist-profile").hasRole("STYLIST")
                         .requestMatchers("/staff-logout").hasAnyRole("STYLIST", "ADMIN")
@@ -86,6 +93,8 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder(PasswordService passwordService) {
+        // Spring Security delegates password comparisons to the same hashing service used by
+        // registration, reset, and first-time setup so there is one password format to maintain.
         return new PasswordServicePasswordEncoder(passwordService);
     }
 

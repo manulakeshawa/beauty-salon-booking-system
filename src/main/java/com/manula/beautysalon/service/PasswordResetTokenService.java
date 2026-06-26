@@ -17,6 +17,8 @@ public class PasswordResetTokenService {
     private final SecureRandom secureRandom = new SecureRandom();
 
     public PasswordResetToken generateToken() {
+        // Reset links are short-lived bearer-token links for users who already had a password
+        // but cannot sign in. The raw token should only travel in the email URL.
         byte[] tokenBytes = new byte[TOKEN_BYTES];
         secureRandom.nextBytes(tokenBytes);
         String rawToken = Base64.getUrlEncoder().withoutPadding().encodeToString(tokenBytes);
@@ -28,6 +30,8 @@ public class PasswordResetTokenService {
             return null;
         }
         try {
+            // Storing a hash lets the application validate a clicked link without keeping the
+            // emailed bearer token itself in the database.
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(rawToken.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             return Base64.getUrlEncoder().withoutPadding().encodeToString(hash);

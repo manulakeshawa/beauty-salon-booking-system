@@ -22,6 +22,8 @@ public class SalonAccessDeniedHandler implements AccessDeniedHandler {
     ) throws IOException, ServletException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (isAuthenticated(authentication)) {
+            // Authenticated users reached a route outside their role; keep them signed in and
+            // show a clear denial page instead of sending them through another login attempt.
             response.sendRedirect(request.getContextPath() + "/access-denied");
             return;
         }

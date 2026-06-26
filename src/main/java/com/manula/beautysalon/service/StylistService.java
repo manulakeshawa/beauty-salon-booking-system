@@ -57,6 +57,8 @@ public class StylistService {
         stylist.setUserId(0);
         validateProfile(stylist.getName(), stylist.getEmail());
         stylist.setEmail(accountEmailService.normalize(stylist.getEmail()));
+        // Admin-created stylist accounts use first-time setup instead of temporary passwords,
+        // so no shared or emailed plain-text password is stored here.
         stylist.setPassword("");
         stylist.setActive(true);
         accountEmailService.assertStylistEmailAvailable(stylist.getEmail(), stylist.getUserId());
@@ -270,6 +272,8 @@ public class StylistService {
 
     private PasswordSetupToken assignPasswordSetupToken(Stylist stylist) {
         PasswordSetupToken token = passwordSetupTokenService.generateToken();
+        // Persist the hash and expiry, not the raw setup token. The raw token belongs only in
+        // the email link and is invalidated when setupPassword clears it after use.
         stylist.setPasswordSetupTokenHash(passwordSetupTokenService.hashToken(token.rawToken()));
         stylist.setPasswordSetupTokenExpiresAt(token.expiresAt());
         return token;

@@ -17,6 +17,8 @@ public class PasswordSetupTokenService {
     private final SecureRandom secureRandom = new SecureRandom();
 
     public PasswordSetupToken generateToken() {
+        // First-time setup links are bearer-token links for admin-created accounts that do
+        // not have passwords yet. Treat the raw token like a password while it is valid.
         byte[] tokenBytes = new byte[TOKEN_BYTES];
         secureRandom.nextBytes(tokenBytes);
         String rawToken = Base64.getUrlEncoder().withoutPadding().encodeToString(tokenBytes);
@@ -28,6 +30,8 @@ public class PasswordSetupTokenService {
             return null;
         }
         try {
+            // Only the token hash is stored in the database; the raw token appears only in
+            // the email link and should not be exposed in admin screens or logs.
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(rawToken.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             return Base64.getUrlEncoder().withoutPadding().encodeToString(hash);

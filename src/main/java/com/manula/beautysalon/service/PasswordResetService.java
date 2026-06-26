@@ -57,6 +57,8 @@ public class PasswordResetService {
         String normalizedEmail = accountEmailService.normalize(email);
         ResettableAccount account = findAccountByEmail(normalizedEmail);
         if (account == null) {
+            // Keep the public response generic so the forgot-password page cannot be used
+            // to confirm whether an email address belongs to an account.
             return;
         }
 
@@ -84,6 +86,8 @@ public class PasswordResetService {
 
         User user = account.user();
         user.setPassword(passwordService.hash(newPassword));
+        // Reset tokens are single-use. A successful password change also clears any pending
+        // first-time setup token so only the new password can be used going forward.
         user.clearPasswordResetToken();
         clearFirstTimeSetupTokenIfPresent(user);
         save(account);

@@ -29,6 +29,8 @@ public class PasswordService {
         secureRandom.nextBytes(salt);
         byte[] hash = derive(rawPassword.toCharArray(), salt, ITERATIONS);
 
+        // Store only a salted PBKDF2 hash plus its parameters. Raw passwords should never be
+        // persisted, logged, emailed, or placed in seed data.
         return FORMAT + "$"
                 + ITERATIONS + "$"
                 + Base64.getEncoder().encodeToString(salt) + "$"

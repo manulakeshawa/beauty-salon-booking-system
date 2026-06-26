@@ -7,6 +7,8 @@ public class PasswordServicePasswordEncoder implements PasswordEncoder {
 
     private final PasswordService passwordService;
 
+    // Adapter used by Spring Security so framework login checks use the application's
+    // PBKDF2 password format instead of a separate encoder configuration.
     public PasswordServicePasswordEncoder(PasswordService passwordService) {
         this.passwordService = passwordService;
     }

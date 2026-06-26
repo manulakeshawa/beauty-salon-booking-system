@@ -65,6 +65,8 @@ public class SalonAuthenticationProvider implements AuthenticationProvider {
     }
 
     private Authentication authenticateStaff(String identifier, String password) {
+        // The staff login screen accepts one identifier field: administrators can use username
+        // or email, while stylists can use the stylist identifiers supported by StaffService.
         Employee employee = staffService.authenticateEmployee(identifier, password);
         if (employee != null && "MANAGER".equalsIgnoreCase(employee.getRole())) {
             return new SalonAuthenticationToken(
@@ -81,6 +83,8 @@ public class SalonAuthenticationProvider implements AuthenticationProvider {
             );
         }
 
+        // Admin-created stylist accounts may exist before a password is set; show the setup-link
+        // message instead of treating that state as a normal bad-password failure.
         if (stylistService.isPasswordSetupPending(identifier)) {
             throw new DisabledException(StylistService.PASSWORD_SETUP_PENDING_LOGIN_MESSAGE);
         }

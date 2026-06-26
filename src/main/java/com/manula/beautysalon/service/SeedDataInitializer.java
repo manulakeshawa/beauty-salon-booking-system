@@ -17,6 +17,8 @@ public class SeedDataInitializer implements ApplicationRunner {
 
     private static final Logger logger = LoggerFactory.getLogger(SeedDataInitializer.class);
 
+    // data.sql is demo/fresh-database data, not a source of truth for a live salon database.
+    // The seed marker prevents deleted or edited live records from being recreated on restart.
     private static final String SEED_NAME = "demo-data-v1";
 
     private final JdbcTemplate jdbcTemplate;
@@ -38,6 +40,8 @@ public class SeedDataInitializer implements ApplicationRunner {
         }
 
         if (!isApplicationDataEmpty()) {
+            // If operators already have data, record the seed as complete without importing
+            // demo rows. This avoids overwriting intentional MySQL changes with sample data.
             markSeedAsRun();
             logger.info("Existing application data found. Marked demo seed as complete without running data.sql.");
             return;
@@ -49,6 +53,8 @@ public class SeedDataInitializer implements ApplicationRunner {
     }
 
     private void ensureSeedHistoryTableExists() {
+        // This table records that the demo seed has run once, so data.sql is not repeatedly
+        // re-applied every time the application starts.
         jdbcTemplate.execute("""
                 CREATE TABLE IF NOT EXISTS app_seed_history (
                     seed_name VARCHAR(100) NOT NULL PRIMARY KEY,

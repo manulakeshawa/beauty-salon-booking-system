@@ -92,6 +92,7 @@ public class SecuritySessionService {
             HttpServletRequest request,
             HttpServletResponse response
     ) {
+        // Rotate an existing session id when a login succeeds to reduce session fixation risk.
         if (request.getSession(false) != null) {
             request.changeSessionId();
         }
@@ -103,6 +104,8 @@ public class SecuritySessionService {
     }
 
     private void applySessionAttributes(SalonUserPrincipal principal, HttpSession session) {
+        // Spring Security owns authorization. These session attributes exist for existing
+        // Thymeleaf views that display names, emails, and staff/customer navigation state.
         if (principal.isCustomer()) {
             clearStaffAttributes(session);
             session.setAttribute("loggedInCustomerEmail", principal.getEmail());
