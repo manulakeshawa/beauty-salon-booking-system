@@ -48,6 +48,8 @@ public class SalonServiceService {
         }
 
         if (!existingService.getClass().equals(updatedService.getClass())) {
+            // A service type change changes the JPA discriminator, so create a replacement row.
+            // Keep the old row inactive when history references it; otherwise remove it cleanly.
             if (hasServiceHistory(existingService.getName())) {
                 existingService.setActive(false);
                 serviceRepository.save(existingService);
@@ -67,6 +69,8 @@ public class SalonServiceService {
 
         if (hasText(previousName) && hasText(existingService.getName())
                 && !previousName.equalsIgnoreCase(existingService.getName())) {
+            // Appointments and reviews record service names for customer-facing history, so
+            // service renames are propagated to keep filters and displays consistent.
             appointmentRepository.updateServiceNameIgnoreCase(previousName, existingService.getName());
             reviewRepository.updateServiceNameIgnoreCase(previousName, existingService.getName());
         }
@@ -80,6 +84,8 @@ public class SalonServiceService {
             return false;
         }
         if (hasServiceHistory(service.getName())) {
+            // Services with past appointments/reviews are hidden from new selection instead of
+            // deleted, preserving older booking and review history.
             service.setActive(false);
             serviceRepository.save(service);
             return true;
@@ -123,6 +129,7 @@ public class SalonServiceService {
     }
 
     private boolean hasServiceHistory(String serviceName) {
+        // Historical appointments/reviews decide whether a service can be physically deleted.
         return hasText(serviceName)
                 && (appointmentRepository.existsByServiceNameIgnoreCase(serviceName)
                 || reviewRepository.existsByServiceNameIgnoreCase(serviceName));

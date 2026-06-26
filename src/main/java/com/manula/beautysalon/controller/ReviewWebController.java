@@ -135,6 +135,8 @@ public class ReviewWebController {
 
         Review review = reviewService.getReviewById(id);
 
+        // Customers may edit only reviews tied to their own display name; admin moderation
+        // uses separate review controls and the verified flag.
         if (review != null && review.getCustomerName().equalsIgnoreCase(loggedInCustomer)) {
             model.addAttribute("review", review);
             return "review-edit";

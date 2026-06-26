@@ -18,6 +18,8 @@ public class ReviewService {
     }
 
     public Review addReview(Review review) {
+        // Customer-submitted reviews start unverified; admins decide which reviews become
+        // trusted public feedback.
         review.setReviewId(null);
         return reviewRepository.save(review);
     }
@@ -43,6 +45,7 @@ public class ReviewService {
     }
 
     public List<Review> getVerifiedReviews() {
+        // Verified reviews are the curated set for public/customer-facing trust signals.
         return reviewRepository.findByVerifiedTrueOrderByReviewIdAsc();
     }
 
@@ -93,6 +96,8 @@ public class ReviewService {
     @Transactional
     public void toggleReviewVerification(int reviewId) {
         reviewRepository.findById(reviewId).ifPresent(review -> {
+            // Verification is an admin moderation flag, separate from whether the customer
+            // owns the review and can edit/delete it from their portal.
             review.setVerified(!review.isVerified());
             reviewRepository.save(review);
         });

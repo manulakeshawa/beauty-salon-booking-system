@@ -17,6 +17,8 @@ public class AppointmentService {
     }
 
     public Appointment saveAppointment(Appointment appointment) {
+        // A booking captures the selected customer, service, and stylist names as they are
+        // shown to salon users, which is why related rename logic updates these fields later.
         appointment.setAppointmentId(0);
         return appointmentRepository.save(appointment);
     }
@@ -47,6 +49,8 @@ public class AppointmentService {
 
     public boolean isStylistAvailable(String stylistName, String date, String time) {
         for (Appointment appointment : readAllAppointments()) {
+            // Cancelled appointments free the time slot; every other status still occupies
+            // the stylist's calendar for that date and time.
             if (!"Cancelled".equalsIgnoreCase(appointment.getStatus())
                     && appointment.getStylistName().equalsIgnoreCase(stylistName)
                     && appointment.getAppointmentDate().equals(date)
@@ -59,6 +63,8 @@ public class AppointmentService {
 
     public boolean isStylistAvailableForUpdate(String stylistName, String date, String time, int excludeAppointmentId) {
         for (Appointment appointment : readAllAppointments()) {
+            // While editing a booking, ignore the booking being edited so it does not block
+            // keeping the same stylist/date/time combination.
             if (!"Cancelled".equalsIgnoreCase(appointment.getStatus())
                     && appointment.getAppointmentId() != excludeAppointmentId
                     && appointment.getStylistName().equalsIgnoreCase(stylistName)

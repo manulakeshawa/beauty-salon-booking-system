@@ -90,6 +90,8 @@ public class CustomerService {
 
             if (hasText(previousName) && hasText(updatedCustomer.getName())
                     && !previousName.equalsIgnoreCase(updatedCustomer.getName())) {
+                // Appointments and reviews store customer names for display/history, so a
+                // profile rename must keep those records readable under the new name.
                 appointmentRepository.updateCustomerNameIgnoreCase(previousName, updatedCustomer.getName());
                 reviewRepository.updateCustomerNameIgnoreCase(previousName, updatedCustomer.getName());
             }
@@ -117,6 +119,8 @@ public class CustomerService {
         }
 
         if (hasText(previousName) && !previousName.equalsIgnoreCase(existing.getName())) {
+            // Customer-facing history is keyed by display name in these tables; propagate the
+            // profile name change so the customer's portal still finds their old activity.
             appointmentRepository.updateCustomerNameIgnoreCase(previousName, existing.getName());
             reviewRepository.updateCustomerNameIgnoreCase(previousName, existing.getName());
         }
@@ -139,6 +143,8 @@ public class CustomerService {
     public void deleteCustomer(int userId) {
         customerRepository.findById(userId).ifPresent(customer -> {
             if (hasText(customer.getName())) {
+                // Customer deletion is a hard delete in this app, so remove the dependent
+                // appointment/review rows that are tied to the customer's display name first.
                 reviewRepository.deleteByCustomerNameIgnoreCase(customer.getName());
                 appointmentRepository.deleteByCustomerNameIgnoreCase(customer.getName());
             }

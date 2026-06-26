@@ -120,6 +120,8 @@ public class StylistService {
 
             if (hasText(previousName) && hasText(updatedStylist.getName())
                     && !previousName.equalsIgnoreCase(updatedStylist.getName())) {
+                // The booking and review records keep stylist names as business history, and
+                // service listings also show the assigned stylist by name.
                 appointmentRepository.updateStylistNameIgnoreCase(previousName, updatedStylist.getName());
                 reviewRepository.updateStylistNameIgnoreCase(previousName, updatedStylist.getName());
                 salonServiceRepository.updateStylistNameIgnoreCase(previousName, updatedStylist.getName());
@@ -148,6 +150,8 @@ public class StylistService {
         }
 
         if (hasText(previousName) && !previousName.equalsIgnoreCase(existing.getName())) {
+            // Keep past appointments, reviews, and assigned service cards aligned when a
+            // stylist updates their public display name.
             appointmentRepository.updateStylistNameIgnoreCase(previousName, existing.getName());
             reviewRepository.updateStylistNameIgnoreCase(previousName, existing.getName());
             salonServiceRepository.updateStylistNameIgnoreCase(previousName, existing.getName());
@@ -171,10 +175,14 @@ public class StylistService {
     public void deleteStylist(int userId) {
         stylistRepository.findById(userId).ifPresent(stylist -> {
             if (hasText(stylist.getName())) {
+                // Services can remain bookable even after a stylist leaves, so detach the
+                // assignment instead of deleting the service with the stylist.
                 salonServiceRepository.updateStylistNameIgnoreCase(stylist.getName(), "Unassigned");
             }
 
             if (hasStylistHistory(stylist.getName())) {
+                // Preserve stylist records that appear in past appointments or reviews; hiding
+                // them from active lists keeps history intact without offering new bookings.
                 stylist.setActive(false);
                 stylist.setAvailable(false);
                 stylistRepository.save(stylist);
@@ -233,6 +241,7 @@ public class StylistService {
     }
 
     private boolean hasStylistHistory(String stylistName) {
+        // Historical appointments/reviews are the boundary between hard delete and inactivation.
         return hasText(stylistName)
                 && (appointmentRepository.existsByStylistNameIgnoreCase(stylistName)
                 || reviewRepository.existsByStylistNameIgnoreCase(stylistName));

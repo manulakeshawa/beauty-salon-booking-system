@@ -16,6 +16,8 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "salon_services")
+// Service type is stored in one table so standard services and packages share the same
+// listing/booking workflow while still calculating prices differently.
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "service_type", discriminatorType = DiscriminatorType.STRING)
 public abstract class SalonService {
