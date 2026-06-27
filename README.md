@@ -14,7 +14,7 @@ Originally developed as a university group project and later expanded by Manula 
 | Security | Spring Security, salted PBKDF2 password hashing |
 | Data | MySQL, Spring Data JPA, Hibernate |
 | Frontend | Thymeleaf, HTML, CSS, JavaScript |
-| Build & Mail | Maven / Maven Wrapper, Spring Mail / SMTP |
+| Build & Email | Maven / Maven Wrapper, HTTPS transactional email API (Brevo) |
 
 ## Main Features
 
@@ -69,19 +69,18 @@ Configure these values locally before running the app:
 | `DB_PASSWORD` | MySQL password for the local database user |
 | `APP_BASE_URL` | Base URL used in emailed setup/reset links, for example `http://localhost:8080` |
 | `APP_SEED_ENABLED` | Enables demo seed data from `data.sql`; defaults to `true` |
-| `MAIL_FROM` | Sender email address |
-| `MAIL_HOST` | SMTP host |
-| `MAIL_PORT` | SMTP port |
-| `MAIL_USERNAME` | SMTP username |
-| `MAIL_PASSWORD` | SMTP password or app password |
-| `MAIL_SMTP_AUTH` | Enables SMTP authentication |
-| `MAIL_SMTP_STARTTLS_ENABLE` | Enables SMTP STARTTLS |
+| `BREVO_API_KEY` | Brevo Transactional Email API key used for HTTPS email sending |
+| `MAIL_FROM` | Verified sender email address |
+| `MAIL_FROM_NAME` | Sender display name; defaults to `Lumiere Salon` |
+| `EMAIL_PROVIDER` | Email provider; optional and defaults to `brevo` |
 
-Do not commit real secrets or real email app passwords.
+Email sending uses Brevo's HTTPS transactional email API instead of SMTP, so it works on platforms such as Render Free where outbound SMTP ports are blocked.
+
+Do not commit real secrets or real email API keys.
 
 ## Deployment Notes
 
-For cloud deployment, set `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, and either `SPRING_DATASOURCE_PASSWORD` or `DB_PASSWORD` from the platform's secret/environment variable settings. Set `APP_BASE_URL` to the deployed site URL so password setup and reset emails do not point to localhost. If demo data should not run against the deployed database, set `APP_SEED_ENABLED=false`.
+For cloud deployment, set `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, and either `SPRING_DATASOURCE_PASSWORD` or `DB_PASSWORD` from the platform's secret/environment variable settings. Set `APP_BASE_URL` to the deployed site URL so password setup and reset emails do not point to localhost. Set `BREVO_API_KEY` and a verified `MAIL_FROM` sender for email delivery. If demo data should not run against the deployed database, set `APP_SEED_ENABLED=false`.
 
 ## Setup and Run
 
