@@ -2,6 +2,7 @@ package com.manula.beautysalon.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.io.ClassPathResource;
@@ -23,15 +24,26 @@ public class SeedDataInitializer implements ApplicationRunner {
 
     private final JdbcTemplate jdbcTemplate;
     private final DataSource dataSource;
+    private final boolean seedEnabled;
 
-    public SeedDataInitializer(JdbcTemplate jdbcTemplate, DataSource dataSource) {
+    public SeedDataInitializer(
+            JdbcTemplate jdbcTemplate,
+            DataSource dataSource,
+            @Value("${app.seed.enabled:true}") boolean seedEnabled
+    ) {
         this.jdbcTemplate = jdbcTemplate;
         this.dataSource = dataSource;
+        this.seedEnabled = seedEnabled;
     }
 
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
+        if (!seedEnabled) {
+            logger.info("Demo seed data is disabled. Skipping data.sql.");
+            return;
+        }
+
         ensureSeedHistoryTableExists();
 
         if (hasSeedAlreadyRun()) {

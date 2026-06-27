@@ -62,8 +62,13 @@ Configure these values locally before running the app:
 
 | Variable | Purpose |
 | --- | --- |
+| `PORT` | HTTP port supplied by a deployment platform; defaults to `8080` locally |
+| `SPRING_DATASOURCE_URL` | MySQL JDBC URL; defaults to `jdbc:mysql://localhost:3306/beauty_salon_db` |
+| `SPRING_DATASOURCE_USERNAME` | MySQL username; defaults to `root` |
+| `SPRING_DATASOURCE_PASSWORD` | MySQL password; `DB_PASSWORD` is also supported for local use |
 | `DB_PASSWORD` | MySQL password for the local database user |
 | `APP_BASE_URL` | Base URL used in emailed setup/reset links, for example `http://localhost:8080` |
+| `APP_SEED_ENABLED` | Enables demo seed data from `data.sql`; defaults to `true` |
 | `MAIL_FROM` | Sender email address |
 | `MAIL_HOST` | SMTP host |
 | `MAIL_PORT` | SMTP port |
@@ -73,6 +78,10 @@ Configure these values locally before running the app:
 | `MAIL_SMTP_STARTTLS_ENABLE` | Enables SMTP STARTTLS |
 
 Do not commit real secrets or real email app passwords.
+
+## Deployment Notes
+
+For cloud deployment, set `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, and either `SPRING_DATASOURCE_PASSWORD` or `DB_PASSWORD` from the platform's secret/environment variable settings. Set `APP_BASE_URL` to the deployed site URL so password setup and reset emails do not point to localhost. If demo data should not run against the deployed database, set `APP_SEED_ENABLED=false`.
 
 ## Setup and Run
 
