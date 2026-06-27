@@ -70,6 +70,9 @@ public class EmailService {
         String textBody = buildPasswordSetupMessage(recipientName, accountType, setupLink, setupToken.expiresAt());
         String htmlBody = buildPasswordSetupHtmlMessage(recipientName, accountType, setupLink, setupToken.expiresAt());
 
+        if (!isPasswordLinkEmailReady("password setup", setupLink, textBody)) {
+            return new PasswordSetupEmailResult(false);
+        }
         return new PasswordSetupEmailResult(sendEmail(recipientEmail, recipientName, subject, htmlBody, textBody, "password setup"));
     }
 
@@ -84,6 +87,9 @@ public class EmailService {
         String textBody = buildPasswordResetMessage(recipientName, accountType, resetLink, resetToken.expiresAt());
         String htmlBody = buildPasswordResetHtmlMessage(recipientName, accountType, resetLink, resetToken.expiresAt());
 
+        if (!isPasswordLinkEmailReady("password reset", resetLink, textBody)) {
+            return false;
+        }
         return sendEmail(recipientEmail, recipientName, subject, htmlBody, textBody, "password reset");
     }
 
@@ -105,6 +111,10 @@ public class EmailService {
         }
         if (!hasText(fromAddress)) {
             logger.warn("{} email could not be sent to {}: MAIL_FROM is not configured.", emailPurpose, recipientEmail);
+            return false;
+        }
+        if (!hasText(textBody)) {
+            logger.warn("{} email could not be sent to {}: plain-text body is blank.", emailPurpose, recipientEmail);
             return false;
         }
 
@@ -187,7 +197,7 @@ public class EmailService {
         String displayAccountType = accountType == null || accountType.isBlank() ? "salon" : accountType.toLowerCase(Locale.ROOT);
         return "Hello " + displayName + ",\n\n"
                 + "Your " + displayAccountType + " account for Lumiere Salon has been created.\n\n"
-                + "Please set your password using this link:\n"
+                + "Use the link below to set your password:\n"
                 + setupLink + "\n\n"
                 + "This link expires at " + EXPIRY_FORMATTER.format(expiresAt) + ".\n\n"
                 + "Do not share this link with anyone. Anyone with access to it can set your password until it expires.\n\n"
@@ -200,8 +210,8 @@ public class EmailService {
         String displayAccountType = accountType == null || accountType.isBlank() ? "salon" : accountType.toLowerCase(Locale.ROOT);
         return "<p>Hello " + escapeHtml(displayName) + ",</p>"
                 + "<p>Your " + escapeHtml(displayAccountType) + " account for Lumiere Salon has been created.</p>"
-                + "<p>Please set your password using this link:<br>"
-                + "<a href=\"" + escapeHtml(setupLink) + "\">Set your password</a></p>"
+                + "<p>Use the link below to set your password:<br>"
+                + "<a href=\"" + escapeHtml(setupLink) + "\">" + escapeHtml(setupLink) + "</a></p>"
                 + "<p>This link expires at " + escapeHtml(EXPIRY_FORMATTER.format(expiresAt)) + ".</p>"
                 + "<p>Do not share this link with anyone. Anyone with access to it can set your password until it expires.</p>"
                 + "<p>Thank you,<br>Lumiere Salon</p>";
@@ -212,7 +222,7 @@ public class EmailService {
         String displayAccountType = accountType == null || accountType.isBlank() ? "salon" : accountType.toLowerCase(Locale.ROOT);
         return "Hello " + displayName + ",\n\n"
                 + "We received a request to reset the password for your " + displayAccountType + " account at Lumiere Salon.\n\n"
-                + "Reset your password using this link:\n"
+                + "Use the link below to reset your password:\n"
                 + resetLink + "\n\n"
                 + "This link expires at " + EXPIRY_FORMATTER.format(expiresAt) + ".\n\n"
                 + "If you did not request this password reset, you can ignore this email.\n"
@@ -226,12 +236,27 @@ public class EmailService {
         String displayAccountType = accountType == null || accountType.isBlank() ? "salon" : accountType.toLowerCase(Locale.ROOT);
         return "<p>Hello " + escapeHtml(displayName) + ",</p>"
                 + "<p>We received a request to reset the password for your " + escapeHtml(displayAccountType) + " account at Lumiere Salon.</p>"
-                + "<p>Reset your password using this link:<br>"
-                + "<a href=\"" + escapeHtml(resetLink) + "\">Reset your password</a></p>"
+                + "<p>Use the link below to reset your password:<br>"
+                + "<a href=\"" + escapeHtml(resetLink) + "\">" + escapeHtml(resetLink) + "</a></p>"
                 + "<p>This link expires at " + escapeHtml(EXPIRY_FORMATTER.format(expiresAt)) + ".</p>"
                 + "<p>If you did not request this password reset, you can ignore this email.<br>"
                 + "Do not share this link with anyone. Anyone with access to it can reset your password until it expires.</p>"
                 + "<p>Thank you,<br>Lumiere Salon</p>";
+    }
+
+    private boolean isPasswordLinkEmailReady(String emailPurpose, String generatedLink, String textBody) {
+        if (!hasText(generatedLink)) {
+            logger.warn("{} email could not be sent: generated link is blank.", emailPurpose);
+            return false;
+        }
+
+        boolean bodyContainsLink = hasText(textBody) && textBody.contains(generatedLink);
+        logger.info("{} email body contains link: {}", emailPurpose, bodyContainsLink);
+        if (!bodyContainsLink) {
+            logger.warn("{} email could not be sent: plain-text body is missing the generated link.", emailPurpose);
+            return false;
+        }
+        return true;
     }
 
     private String escapeHtml(String value) {
