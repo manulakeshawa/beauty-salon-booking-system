@@ -6,6 +6,10 @@ Originally developed as a university group project and later expanded by Manula 
 
 **Tech highlight:** Java 17 · Spring Boot · MySQL · Thymeleaf · Spring Security
 
+**Live Demo:** https://beauty-salon-booking-system.onrender.com
+
+> The free hosted demo may take a short time to wake up after inactivity.
+
 ## Tech Stack
 
 | Area | Technologies |
@@ -15,6 +19,7 @@ Originally developed as a university group project and later expanded by Manula 
 | Data | MySQL, Spring Data JPA, Hibernate |
 | Frontend | Thymeleaf, HTML, CSS, JavaScript |
 | Build & Email | Maven / Maven Wrapper, HTTPS transactional email API (Brevo) |
+| Deployment | Render, Aiven MySQL, Brevo Transactional Email API |
 
 ## Main Features
 
@@ -60,19 +65,18 @@ The app uses MySQL (`beauty_salon_db`) with Spring Data JPA. On first run, `data
 
 Configure these values locally before running the app:
 
-| Variable | Purpose |
-| --- | --- |
-| `PORT` | HTTP port supplied by a deployment platform; defaults to `8080` locally |
-| `SPRING_DATASOURCE_URL` | MySQL JDBC URL; defaults to `jdbc:mysql://localhost:3306/beauty_salon_db` |
-| `SPRING_DATASOURCE_USERNAME` | MySQL username; defaults to `root` |
-| `SPRING_DATASOURCE_PASSWORD` | MySQL password; `DB_PASSWORD` is also supported for local use |
-| `DB_PASSWORD` | MySQL password for the local database user |
-| `APP_BASE_URL` | Base URL used in emailed setup/reset links, for example `http://localhost:8080` |
-| `APP_SEED_ENABLED` | Enables demo seed data from `data.sql`; defaults to `true` |
-| `BREVO_API_KEY` | Brevo Transactional Email API key used for HTTPS email sending |
-| `MAIL_FROM` | Verified sender email address |
-| `MAIL_FROM_NAME` | Sender display name; defaults to `Lumiere Salon` |
-| `EMAIL_PROVIDER` | Email provider; optional and defaults to `brevo` |
+| Variable                      | Purpose |
+|-------------------------------| --- |
+| `PORT`                        | HTTP port supplied by a deployment platform; defaults to `8080` locally |
+| `SPRING_DATASOURCE_URL`       | MySQL JDBC URL; defaults to `jdbc:mysql://localhost:3306/beauty_salon_db` |
+| `SPRING_DATASOURCE_USERNAME`  | MySQL username; defaults to `root` |
+| `SPRING_DATASOURCE_PASSWORD` / `DB_PASSWORD` | MySQL password. `SPRING_DATASOURCE_PASSWORD` is used for deployment; `DB_PASSWORD` is also supported as a local fallback.|
+| `APP_BASE_URL`                | Base URL used in emailed setup/reset links, for example `http://localhost:8080` |
+| `APP_SEED_ENABLED`            | Enables demo seed data from `data.sql`; defaults to `true` |
+| `BREVO_API_KEY`               | Brevo Transactional Email API key used for HTTPS email sending |
+| `MAIL_FROM`                   | Verified sender email address |
+| `MAIL_FROM_NAME`              | Sender display name; defaults to `Lumiere Salon` |
+| `EMAIL_PROVIDER`              | Optional email provider selector; currently defaults to `brevo` |
 
 Email sending uses Brevo's HTTPS transactional email API instead of SMTP, so it works on platforms such as Render Free where outbound SMTP ports are blocked.
 
@@ -80,7 +84,9 @@ Do not commit real secrets or real email API keys.
 
 ## Deployment Notes
 
-For cloud deployment, set `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, and either `SPRING_DATASOURCE_PASSWORD` or `DB_PASSWORD` from the platform's secret/environment variable settings. Set `APP_BASE_URL` to the deployed site URL so password setup and reset emails do not point to localhost. Set `BREVO_API_KEY` and a verified `MAIL_FROM` sender for email delivery. If demo data should not run against the deployed database, set `APP_SEED_ENABLED=false`.
+The live demo is deployed with Render for the Spring Boot web service, Aiven MySQL for the cloud database, and Brevo Transactional Email API for password setup/reset emails.
+
+For deployment, `APP_BASE_URL` must be set to the live site URL so emailed setup/reset links point to the deployed app instead of localhost. `APP_SEED_ENABLED` can be set to `false` after the demo database has been seeded once.
 
 ## Setup and Run
 
@@ -97,7 +103,8 @@ For cloud deployment, set `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`,
    CREATE DATABASE beauty_salon_db;
    ```
 
-3. Configure the environment variables listed above.
+3. Configure the environment variables listed above using your system environment variables, IntelliJ Run Configuration, or your deployment platform's environment/secret settings.
+
 
 4. Run the application with the Maven Wrapper.
 
@@ -117,20 +124,19 @@ To build without running tests:
 .\mvnw.cmd clean package -DskipTests
 ```
 
-## Local Demo Accounts
+## Demo Accounts
 
-Demo accounts are for local development only and come from `data.sql`.
+The following non-admin demo accounts are available for local/demo testing and come from `data.sql`.
 
 | Role | Login | Password |
 | --- | --- | --- |
-| Admin | `admin` or `admin@lumieresalon.lk` | `lumiere2026` |
 | Customer | `amaya.f@email.com` | `amaya123` |
 | Customer | `sarah.j@email.com` | `pass123` |
 | Stylist | `nalika@lumieresalon.lk` | `#nalika@lume` |
 | Stylist | `kasun@lumieresalon.lk` | `#kasun@lume` |
 | Stylist | `kamindu@lumieresalon.lk` | `#kamindu@lume` |
 
-These credentials are for local/demo use only
+Admin demo access is intentionally not listed publicly for the live deployment.
 
 ## Screenshots
 
@@ -160,28 +166,42 @@ src/main/java/com/manula/beautysalon/
   model/           JPA entities and domain models
   repository/      Spring Data repositories
   security/        Authentication and access control
-  service/         Business logic and email/account flows
+  service/         Business logic, account flows, and email services
+  util/            Shared helper utilities
 
 src/main/resources/
   templates/       Thymeleaf views
-  static/          CSS, JavaScript, and image assets
+  static/          CSS, images, and frontend assets
   data.sql         Local demo seed data
   application.properties
+  
+docs/screenshots/  README screenshots
+Dockerfile         Deployment container configuration
+LICENSE            MIT license
+pom.xml            Maven project configuration
 ```
 
-## Personal Contributions (Post-Group)
+## Portfolio Enhancements by Manula Keshawa Pinidiya
 
-- Migrated file-based storage to MySQL/JPA
-- Added Spring Security role-based authentication
-- Added password hashing, reset emails, and first-time password setup flows
-- Improved account management, validation, and documentation
+- Migrated the original file-based storage system to MySQL with Spring Data JPA/Hibernate
+- Refactored the project structure and added service-layer business logic
+- Added Spring Security role-based authentication and route protection for customer, stylist, and admin accounts
+- Added salted PBKDF2 password hashing, global email uniqueness, profile management, and secure account update flows
+- Added first-time password setup and forgot-password reset flows using expiring email tokens
+- Added email sending with Brevo HTTPS transactional email API for cloud deployment compatibility
+- Prepared the project for deployment with environment-based configuration, Render hosting, and Aiven MySQL
+- Improved README documentation, screenshots, and code comments for portfolio presentation
 
-## Original Contributors - Group WD109
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Original Contributors - SLIIT 2026 Group WD109
 
 | Student ID | GitHub |
 | --- | --- |
-| IT25102887 | [@IT25102887](https://github.com/IT25102887) |
+| IT25101660 | Manula Keshawa Pinidiya — original contributor; portfolio version maintained at [@manulakeshawa](https://github.com/manulakeshawa) |
 | IT25101942 | [@IT25101942](https://github.com/IT25101942) |
-| IT25101660 | [@IT25101660](https://github.com/IT25101660) |
+| IT25102887 | [@IT25102887](https://github.com/IT25102887) |
 | IT25100717 | [@Anudi717](https://github.com/Anudi717) |
 | IT25101934 | [@it25101934](https://github.com/it25101934) |
